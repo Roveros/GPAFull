@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     TimerController timer;
     GPAConfigModel config;
+
     TextView tvTimerDisplay, tvCounterDisplay;
     EditText etSessionTitle;
     CoordinatorLayout layout;
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         //init the GPAConfigModel
-        config = new GPAConfigModel();
+        config = new GPAConfigModel(this);
 
         //get timer display TextView from view
         tvTimerDisplay = findViewById(R.id.tvTimerDisplay);
@@ -82,7 +83,11 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
            // Toast.makeText(MainActivity.this, "Settings", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(this, OptionActivity.class);
+            config = new GPAConfigModel(this);
+            Intent intent = new Intent(this, SettingsActivity.class);
+            intent.putExtra("shortBreakLength", config.getShortBreakLength());
+            intent.putExtra("longBreakLength", config.getLongBreakLength());
+            intent.putExtra("pomLength", config.getPomLength());
             startActivity(intent);
         } else if (id == R.id.action_exit) {
             onExitClick();
@@ -95,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
 
     //Starts timer if not already started
     public void onStartClick(View view) {
+        config = new GPAConfigModel(this);
+        timer = new TimerController(MainActivity.this, layout, progressBar, config, tvTimerDisplay, tvCounterDisplay, etSessionTitle);
         timer.start("pom");
     }
 

@@ -74,7 +74,7 @@ class TimerController {
                     Color.parseColor("#ff669900"), android.graphics.PorterDuff.Mode.SRC_IN);
 
             /*        millisinFuture = config.getPomLength() * 60000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = 25 * 60000; // 25 * 1 Minute
+            millisinFuture = config.getPomLength() * 60000; // 25 * 1 Minute
 
         } else if (type.equals("shortBreak")) {
             //model param to track timer state
@@ -84,7 +84,7 @@ class TimerController {
                     Color.parseColor("#a9a9a9"), android.graphics.PorterDuff.Mode.SRC_IN);
 
             /*millisinFuture = config.getShortBreakLength() * 60000;    // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = 5 * 60000; // 5 * 1 Minute
+            millisinFuture = config.getShortBreakLength() * 60000; // 5 * 1 Minute
 
         } else if (type.equals("longBreak")) {
             //model param to track timer state
@@ -98,7 +98,7 @@ class TimerController {
             tvCounterDisplay.setText(counter + "");
 
             /*millisinFuture = config.getLongBreakLength() * 60000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = 15 * 60000; // 15 * 1 Minute
+            millisinFuture = config.getLongBreakLength() * 60000; // 15 * 1 Minute
         }
 
         //set progress bar maximum = to the total number of miliseconds of the timer

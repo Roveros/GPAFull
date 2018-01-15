@@ -22,7 +22,7 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:title="GPA Full"
-            app:titleTextColor="@color/colorAccent" />
+            app:titleTextColor="@android:color/holo_red_dark" />
 
     </android.support.design.widget.AppBarLayout>
 
