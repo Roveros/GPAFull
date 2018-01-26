@@ -31,6 +31,7 @@ class TimerController {
     private Context context;
     private CoordinatorLayout layout;
     private ProgressBar progressBar;
+    private BadgeController badgeController;
 
 
     TimerController(Context context, CoordinatorLayout layout, ProgressBar progressBar, GPAConfigModel config,
@@ -51,6 +52,10 @@ class TimerController {
         tvCounterDisplay.setText(counter + "");
 
         this.etSessionTitle = etSessionTitle;
+
+
+        //init the BadgeController
+        badgeController = new BadgeController(this.context, etSessionTitle);
     }
 
     void start(final String type) {
@@ -73,8 +78,8 @@ class TimerController {
             progressBar.getProgressDrawable().setColorFilter(
                     Color.parseColor("#ff669900"), android.graphics.PorterDuff.Mode.SRC_IN);
 
-            /*        millisinFuture = config.getPomLength() * 60000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = config.getPomLength() * 60000; // 25 * 1 Minute
+            millisinFuture = 5000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
+            //millisinFuture = config.getPomLength() * 60000; // 25 * 1 Minute
 
         } else if (type.equals("shortBreak")) {
             //model param to track timer state
@@ -83,8 +88,8 @@ class TimerController {
             progressBar.getProgressDrawable().setColorFilter(
                     Color.parseColor("#a9a9a9"), android.graphics.PorterDuff.Mode.SRC_IN);
 
-            /*millisinFuture = config.getShortBreakLength() * 60000;    // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = config.getShortBreakLength() * 60000; // 5 * 1 Minute
+            millisinFuture = 3000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
+            //millisinFuture = config.getShortBreakLength() * 60000; // 5 * 1 Minute
 
         } else if (type.equals("longBreak")) {
             //model param to track timer state
@@ -97,8 +102,8 @@ class TimerController {
             counter = 0;
             tvCounterDisplay.setText(counter + "");
 
-            /*millisinFuture = config.getLongBreakLength() * 60000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
-            millisinFuture = config.getLongBreakLength() * 60000; // 15 * 1 Minute
+            millisinFuture = 4000;     // 1000 = 1 second, 60000 = 60 seconds or 1 minute*/
+            //millisinFuture = config.getLongBreakLength() * 60000; // 15 * 1 Minute
         }
 
         //set progress bar maximum = to the total number of miliseconds of the timer
@@ -121,6 +126,9 @@ class TimerController {
                 public void onFinish() {
                     model.setEndTime();
                     model.persist();
+                    badgeController.checkAllBadges();
+
+
 
                     progressBar.setProgress(0);
 

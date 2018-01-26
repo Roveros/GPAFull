@@ -1,10 +1,12 @@
 package com.gpa.browne.gpafull;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -13,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,7 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         //init the GPAConfigModel
         config = new GPAConfigModel(this);
+
 
         //get timer display TextView from view
         tvTimerDisplay = findViewById(R.id.tvTimerDisplay);
@@ -200,5 +206,36 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("Contents : " + fileAsString);
 
         return fileAsString;
+    }
+
+    public void onDebugClick(View view) {
+//Code for displaying an image in a alert dialogue
+/*        ImageView image = new ImageView(this);
+        image.setImageResource(R.drawable.badge1);
+
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(this).
+                        setMessage("Badge Earned!").
+                        setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).
+                        setView(image);
+        builder.create().show();*/
+
+        //create default data for this week.
+        // get today and clear time of day
+        Calendar cal = Calendar.getInstance(new Locale("en","UK"));
+        cal.set(Calendar.HOUR_OF_DAY, 0); // ! clear would not reset the hour of day !
+        cal.clear(Calendar.MINUTE);
+        cal.clear(Calendar.SECOND);
+        cal.clear(Calendar.MILLISECOND);
+
+        // get start of this week
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+        Log.i("INFO","Start of this week:       " + cal.getTime());
+        Toast.makeText(this, "Start of this week:       " + cal.getTime(), Toast.LENGTH_SHORT).show();
     }
 }

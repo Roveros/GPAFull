@@ -144,4 +144,9 @@ public class SettingsActivity extends AppCompatActivity {
         GPAConfigModel model = new GPAConfigModel(getApplicationContext());
         model.saveSettings(config[0], config[1] , config[2]);
     }
+
+    public void onHelpClick(View view) {
+        Toast.makeText(getApplicationContext(), "Use the sliders to set the number of minutes for each timer. " +
+                "Timer can be set in increments of 5. The Default settings are recommended.",Toast.LENGTH_LONG).show();
+    }
 }
