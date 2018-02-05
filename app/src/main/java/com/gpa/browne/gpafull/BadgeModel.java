@@ -240,7 +240,7 @@ public class BadgeModel {
         String[] friday = {badges[13], badges[14], badges[15]};
         String[] saturday = {badges[16], badges[17], badges[18]};
         String[] sunday = {badges[19], badges[20], badges[21]};
-        String[] week = {badges[22], badges[22], badges[24], badges[25]};
+        String[] week = {badges[22], badges[23], badges[24], badges[25]};
 
         weekList.add(monday);       //0
         weekList.add(tuesday);      //1
@@ -258,7 +258,7 @@ public class BadgeModel {
         badges[0] = firstDayOfThisWeek;
         //iterate through each array in the list
         for (String[] array: weekList) {
-
+            Log.i("INFO", "Array "+ i +": " + Arrays.toString(array));
             //iterate trhough each value in the array
             for (int j = 0; j < array.length; j++) {
                 badges[i] = array[j];
@@ -288,12 +288,12 @@ public class BadgeModel {
         }
 
         //-----------------------------------DEBUG BADGES-----------------------------------//
-        badges[1] = "b1";     //monday
+        badges[13] = "b1";     //friday
         badges[4] = "b1";     //tuesday
         badges[7] = "b1";     //wednesday
         badges[10] = "b1";     //thursday
 
-        badges[2] = "b2";     //monday
+        badges[14] = "b2";     //friday
         badges[5] = "b2";     //tuesday
         badges[8] = "b2";     //wednesday
         badges[11] = "b2";     //thursday
@@ -301,13 +301,24 @@ public class BadgeModel {
         //badges[13] = "b1";     //friday
         //-----------------------------------DEBUG BADGES-----------------------------------//
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String fileName = dateFormat.format(cal.getTime()) + ".txt";
+
+        File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
+        File mySubDir = new File(myMainDir, topic);
+        File myFinalDir = new File(mySubDir, fileName);
+
+        if (!myFinalDir.exists()){
+            createDefaultBadges();
+        }
+
         //make the data more accessable using an arraylist for each day + week as a whole
         parseStringDatatoWeekList();
 
         checkBadge1();
         checkBadge2();
         checkBadge3();
-        //checkBadge4();
+        checkBadge4();
         checkBadge5();
         checkBadge6();
         checkBadge7();
@@ -421,8 +432,10 @@ public class BadgeModel {
                 }
 
                 //if there are 4 other recored b1's then this one makes 5, award badge
-                if (i >= 4){
-                    weekList.get(7)[0] = "b3";
+                if (i == 4){
+                    if(!weekList.get(today).equals("b3")){
+                        weekList.get(7)[0] = "b3";
+                    }
                     return 1;
                 }
                 fileIn.close();
@@ -469,12 +482,12 @@ public class BadgeModel {
 
                 int i = 0;
                 for (String element : rawData) {
-                    if (element.equals("b1")){ i++; }
+                    if (element.equals("b2")){ i++; }
                 }
 
                 //if there are 4 other recored b1's then this one makes 5, award badge
-                if (i >= 4){
-                    if(weekList.get(today)[1].equals("b2")){
+                if (i == 4) {
+                    if (weekList.get(today)[1].equals("b2")) {
                         weekList.get(7)[1] = "b4";
                         return 1;
                     }
@@ -483,7 +496,7 @@ public class BadgeModel {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.i("INFO", "checkBadge4() failed");
+                Log.i("INFO", "checkBadge4() failed to read: " + topic);
             }
             return 0;
         }
@@ -500,6 +513,7 @@ public class BadgeModel {
     public int checkBadge7(){
         return 0;
     }
+
 
     /**
      * Pom completes

@@ -127,9 +127,6 @@ class TimerController {
                     model.setEndTime();
                     model.persist();
                     badgeController.checkAllBadges();
-
-
-
                     progressBar.setProgress(0);
 
                     //on finish calls an alert dialog as appropriate

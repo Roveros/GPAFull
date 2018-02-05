@@ -20,8 +20,8 @@ public class BadgeController {
 
 
     public void checkAllBadges() {
-        //model = null;
-        //model = new BadgeModel(context);
+        model = null;
+        model = new BadgeModel(context, etSessionTitle.getText().toString());
         model.checkAllBadges();
        // model.persist();
     }
