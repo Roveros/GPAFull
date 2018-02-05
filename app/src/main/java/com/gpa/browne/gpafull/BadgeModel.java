@@ -57,7 +57,7 @@ public class BadgeModel {
         //remove the last ':' from the string
         badgePersistString = badgePersistString.substring(0, badgePersistString.length()-1);
 
-        Log.i("INFO","Persisting badge data as " + fileName + ".txt");
+        Log.i("INFO","Persisting badge data as " + fileName);
         try {
             File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
             File mySubDir = new File(myMainDir, topic);
@@ -68,11 +68,11 @@ public class BadgeModel {
             OutputStreamWriter outputWriter = new OutputStreamWriter(out);
             outputWriter.write(badgePersistString);
             outputWriter.close();
-            Log.i("INFO",fileName + ".txt saved.");
+            Log.i("INFO",fileName + " saved.");
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.i("INFO","Error saving " + fileName + ".txt");
+            Log.i("INFO","Error saving " + fileName);
         }
 
         return 0;
@@ -288,11 +288,17 @@ public class BadgeModel {
         }
 
         //-----------------------------------DEBUG BADGES-----------------------------------//
-    /*    badges[1] = "b1";     //monday
+        badges[1] = "b1";     //monday
         badges[4] = "b1";     //tuesday
         badges[7] = "b1";     //wednesday
         badges[10] = "b1";     //thursday
-        badges[13] = "b1";     //friday*/
+
+        badges[2] = "b2";     //monday
+        badges[5] = "b2";     //tuesday
+        badges[8] = "b2";     //wednesday
+        badges[11] = "b2";     //thursday
+
+        //badges[13] = "b1";     //friday
         //-----------------------------------DEBUG BADGES-----------------------------------//
 
         //make the data more accessable using an arraylist for each day + week as a whole
@@ -301,7 +307,7 @@ public class BadgeModel {
         checkBadge1();
         checkBadge2();
         checkBadge3();
-        checkBadge4();
+        //checkBadge4();
         checkBadge5();
         checkBadge6();
         checkBadge7();
@@ -332,7 +338,7 @@ public class BadgeModel {
 
             try {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                String fileName = dateFormat.format(cal.getTime()) + ".txt";
+                String fileName = dateFormat.format(calToday.getTime()) + ".txt";
 
                 File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
                 File mySubDir = new File(myMainDir, topic);
@@ -378,6 +384,7 @@ public class BadgeModel {
     //earned b1 5/7 days of the current week
     public int checkBadge3(){
         if(hasBadge("b3")){
+            Log.i("INFO", "Found badge 3 for topic: " + topic);
             return 1;
         } else {
             //read todays sessions and look for a 4 streak
@@ -429,7 +436,57 @@ public class BadgeModel {
     }
 
     public int checkBadge4(){
-        return 0;
+        if(hasBadge("b4")){
+            return 1;
+        } else {
+            //reading text from file
+            //look for 4 "b2" badges. If this session gave the last b2 it will
+
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                String fileName = dateFormat.format(cal.getTime()) + ".txt";
+
+                File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
+                File mySubDir = new File(myMainDir, topic);
+                File myFinalDir = new File(mySubDir, fileName);
+
+                Log.i("INFO", "Retrieving badges and checking badge 4 for topic: " + topic);
+                FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
+                InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+                char[] inputBuffer = new char[READ_BLOCK_SIZE];
+                String s = "";
+                int charRead;
+
+                while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                    // char to string conversion
+                    String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                    s += readstring;
+                }
+                InputRead.close();
+                Log.i("INFO", "File contents: " + s);
+                String rawData[] = s.split("\\."); //each array represents a session
+
+                int i = 0;
+                for (String element : rawData) {
+                    if (element.equals("b1")){ i++; }
+                }
+
+                //if there are 4 other recored b1's then this one makes 5, award badge
+                if (i >= 4){
+                    if(weekList.get(today)[1].equals("b2")){
+                        weekList.get(7)[1] = "b4";
+                        return 1;
+                    }
+                }
+                fileIn.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.i("INFO", "checkBadge4() failed");
+            }
+            return 0;
+        }
     }
 
     public int checkBadge5(){
