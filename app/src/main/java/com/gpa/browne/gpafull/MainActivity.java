@@ -97,6 +97,22 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else if (id == R.id.action_exit) {
             onExitClick();
+        } else if (id == R.id.action_goals) {
+            if(!TextUtils.isEmpty(etSessionTitle.getText())){
+                Intent intent = new Intent(this, GoalsActivity.class);
+                intent.putExtra("topic", etSessionTitle.getText().toString());
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Cannot set goals without a session topic.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (id == R.id.action_prizes) {
+            Toast.makeText(this, "Prize Page Loads", Toast.LENGTH_SHORT).show();
+            config = new GPAConfigModel(this);
+            Intent intent = new Intent(this, PrizesActivity.class);
+            intent.putExtra("shortBreakLength", config.getShortBreakLength());
+            intent.putExtra("longBreakLength", config.getLongBreakLength());
+            intent.putExtra("pomLength", config.getPomLength());
+            startActivity(intent);
         } else if (id == R.id.action_email) {
             sendEmail();
         }
@@ -224,8 +240,8 @@ public class MainActivity extends AppCompatActivity {
                         }).
                         setView(image);
         builder.create().show();*/
-
-        //create default data for this week.
+//****************************************************************************************************//
+/*        //create default data for this week.
         // get today and clear time of day
         Calendar cal = Calendar.getInstance(new Locale("en","UK"));
         cal.set(Calendar.HOUR_OF_DAY, 0); // ! clear would not reset the hour of day !
@@ -236,6 +252,6 @@ public class MainActivity extends AppCompatActivity {
         // get start of this week
         cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         Log.i("INFO","Start of this week:       " + cal.getTime());
-        Toast.makeText(this, "Start of this week:       " + cal.getTime(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Start of this week:       " + cal.getTime(), Toast.LENGTH_SHORT).show();*/
     }
 }

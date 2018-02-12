@@ -22,9 +22,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:screenOrientation="portrait"
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".GoalsActivity"
+            android:label="@string/title_activity_goals"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".PrizesActivity"
+            android:label="@string/title_activity_prizes"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

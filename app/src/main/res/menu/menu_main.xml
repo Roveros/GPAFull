@@ -20,4 +20,16 @@
         android:title="@string/action_email"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_goals"
+        android:orderInCategory="100"
+        android:title="Set Goals"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_prizes"
+        android:orderInCategory="100"
+        android:title="Set Prizes"
+        app:showAsAction="never" />
+
 </menu>
