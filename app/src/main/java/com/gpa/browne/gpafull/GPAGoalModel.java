@@ -47,6 +47,9 @@ public class GPAGoalModel {
     //looks for .txt file with badge data for the given topic
     public int getGoalData(){
 
+        //Empty the list
+        goalList.clear();
+
         //get date of the this weeks first day (Monday)
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String fileName = dateFormat.format(cal.getTime());
@@ -127,6 +130,7 @@ public class GPAGoalModel {
             }
             //get this weeks data if it exists
             try {
+                Log.i("INFO", "GoalList size: " + goalList.size());
                 for (String goalData[] : goalList) {
                     Log.i("INFO", "Comparing goalData[0]: "+ goalData[0].toString() + " to first day: " + firstDayOfWeek );
                     if(goalData[0].equals(firstDayOfWeek)){
@@ -134,7 +138,10 @@ public class GPAGoalModel {
                         goals = goalData;
                         Log.i("INFO", "goals[] contents: " + Arrays.toString(goals));
                     } else {
-                        goals = new String[]{firstDayOfWeek,"","","","",""};
+                        //Only set goals to default if it is not currently set to THIS weeks' monday
+                        if(!goals[0].equals(firstDayOfWeek)){
+                            goals = new String[]{firstDayOfWeek,"","","","",""};
+                        }
                     }
                 }
             } catch (Exception e){
@@ -161,7 +168,7 @@ public class GPAGoalModel {
         //give the array the correct week starting date
         goals[0] = firstDayOfWeek;
         goals[1] = "1";
-        goals[2] = "8";
+        goals[2] = "4";
         goals[3] = "DD/MM/YYYY";
         goals[4] = "HH:MM";
         goals[5] = "0";
@@ -201,18 +208,19 @@ public class GPAGoalModel {
         //date@1@8@10/03/2018@11:55@0
         //get date of the this weeks first day (Monday)
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String date = dateFormat.format(cal.getTime().toString());
+        String fileName = dateFormat.format(cal.getTime());
         //String date = "Mon Feb 5 00:00:00 GMT+00:00 2018";
+        String date = getFirstDayOfThisWeek();
         String settings = "";
         settings = date + "@" + dailyGoal + "@" + weeklyGoal + "@" + deadlineDate + "@" + deadlineTime + "@" + completed;
         Log.i("INFO", "Saving new goals data ...");
 
         try {
             //get date of the this weeks first day (Monday)
-            //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String fileName = dateFormat.format(cal.getTime().toString());
-            //cal.add(Calendar.DAY_OF_MONTH, -7);
-           // String fileName = dateFormat.format(cal.getTime().toString());
+/*            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String fileName = dateFormat.format(cal.getTime().toString());*/
+           // cal.add(Calendar.DAY_OF_MONTH, -7);
+           //fileName = dateFormat.format(cal.getTime());
 
             //Identify the directory that goals data is saved in
             File myMainDir = context.getDir("goals", Context.MODE_PRIVATE);
@@ -254,5 +262,10 @@ public class GPAGoalModel {
         today = calToday.get(Calendar.DAY_OF_WEEK) - 2;
         firstDayOfWeek = cal.getTime().toString();
         return cal.getTime().toString();
+    }
+
+    public String[] getThisWeeksGoals() {
+        getGoalData();
+        return goals;
     }
 }

@@ -94,6 +94,9 @@ public class GoalsActivity extends AppCompatActivity {
         }
 
         model.saveSettings(dailyGoal, weeklyGoal, deadlineDate, deadlineTime, completed);
+        Toast.makeText(getApplicationContext(), "Saving ... ",Toast.LENGTH_SHORT).show();
+        finish();
+
     }
 
     public void onClickShowTimePicker(View view) {
@@ -103,6 +106,7 @@ public class GoalsActivity extends AppCompatActivity {
     }
 
     public void onClickShowDatePicker(View view) {
+        onClickShowTimePicker(view);
         DialogFragment newFragment = new DatePickerFragment();
         newFragment.show(getSupportFragmentManager(), "datePicker");
     }

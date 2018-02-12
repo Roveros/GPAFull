@@ -288,7 +288,7 @@ class TimerController {
             }
         });
 
-        handler.postDelayed(runnable, 60000); // 1 Minute
+        handler.postDelayed(runnable, 60000 * 5); // 1 Minute * 5
 
     }
 

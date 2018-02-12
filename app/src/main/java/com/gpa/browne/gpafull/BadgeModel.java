@@ -503,10 +503,183 @@ public class BadgeModel {
     }
 
     public int checkBadge5(){
+        //get model to give goal data
+        GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
+        String goals[] = modelGoal.getThisWeeksGoals();
+
+        Log.i("INFO", "Goals from model: "+ Arrays.toString(goals));
+
+        //if valid goal detected
+        if ((Integer.valueOf(goals[1]) >= 1) && !hasBadge("b5")){
+            Log.i("INFO", "Does not have badge 5. Goal is greater than 1 hour per day: " + goals[1]);
+
+            //get number of minutes per goal
+            int goalInMinutes = Integer.valueOf(goals[1]) * 60;
+            int numOfPomsRequired;
+
+            if((goalInMinutes % 25) == 0){
+                numOfPomsRequired = (goalInMinutes / 25);
+            } else {
+                numOfPomsRequired = (goalInMinutes / 25) + 1;
+            }
+
+            Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
+
+            //Check todays logs and see how many "pom"
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                String fileName = dateFormat.format(calToday.getTime()) + ".txt";
+
+                File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
+                File mySubDir = new File(myMainDir, topic);
+                // mySubDir.mkdir();
+                File myFinalDir = new File(mySubDir, fileName);
+
+                Log.i("INFO", "Retrieving logs and checking badge 5 for topic: " + topic);
+                FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
+                InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+                char[] inputBuffer = new char[READ_BLOCK_SIZE];
+                String s = "";
+                int charRead;
+
+                while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                    // char to string conversion
+                    String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                    s += readstring;
+                }
+                InputRead.close();
+                Log.i("INFO", "File contents: " + s);
+                String rawData[] = s.split("%"); //each array represents a session
+                //i is outside the foreach because i'm not looking for consecutive poms
+                int i = 0;
+                for (String data : rawData) {
+                    String tempArray[] = data.split("\\.");
+                    for (String element : tempArray) {
+                        if (element.equals("pom")){ i++; }
+                    }
+                    if (i >= numOfPomsRequired){
+                        weekList.get(today)[2] = "b5";
+                        Log.i("INFO", "Badge 5 Earned");
+                        return 1;
+                    }
+                    fileIn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.i("INFO", "checkBadge5() failed");
+            }
+        }
         return 0;
     }
 
     public int checkBadge6(){
+        //identify first day of this week. I need to get every file that is on or after that date. Count poms
+
+        //get model to give goal data
+        GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
+        String goals[] = modelGoal.getThisWeeksGoals();
+
+        Log.i("INFO", "Goals from model for badge 6: "+ Arrays.toString(goals));
+
+        File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
+        File mySubDir = new File(myMainDir, topic);
+
+        if(!mySubDir.exists()){
+            mySubDir.mkdir();
+        }
+
+        ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
+        File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
+        for (File file : filesInFolder) { //For each of the entries do:
+            Date tempDate =null;
+            Calendar tempCal = cal;
+
+            if (!file.isDirectory()) { //check that it's not a dir
+                //check date
+                //Date
+                Log.i("INFO", "File in directory: "+ file.getName());
+
+                try{
+                    //remove the .txt from the end
+                    String date = file.getName().substring(0, (file.getName().length() - 4));
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    tempDate = dateFormat.parse(date);
+                    //create a temp date 50 seconds before start of week for checking for this weeks' files
+                    tempCal.add(Calendar.SECOND, -50);
+                    if(tempDate.after(tempCal.getTime())){
+                        Log.i("INFO", "File " + tempDate.toString() + " after " +tempCal.getTime());
+                        files.add(new String(file.getName())); //push the filename as a string
+                    } else {
+                        Log.i("INFO", "File " + tempDate.toString() + " not after " +tempCal.getTime());
+                    }
+                } catch (Exception e){
+                    Log.i("INFO", "Error comparing dates: " + tempDate.getTime() + " and " +tempCal.getTime());
+                }
+            }
+        }
+        //if valid goal detected
+        if ((Integer.valueOf(goals[2]) >= 4) && !hasBadge("b6") && !files.isEmpty()){
+            Log.i("INFO", "Does not have badge 6. Goal is greater than 4 hour per day: " + goals[2]);
+
+            //get number of minutes per goal
+            int goalInMinutes = Integer.valueOf(goals[2]) * 60;
+            int numOfPomsRequired;
+
+            if((goalInMinutes % 25) == 0){
+                numOfPomsRequired = (goalInMinutes / 25);
+            } else {
+                numOfPomsRequired = (goalInMinutes / 25) + 1;
+            }
+
+            Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
+
+            //Check todays logs and see how many "pom"
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                //String fileName = dateFormat.format(calToday.getTime()) + ".txt";
+
+                int i = 0;
+                //for each file, read log and count poms
+                for (String file : files) {
+
+                    File myFinalDir = new File(mySubDir, file);
+
+                    Log.i("INFO", "Retrieving logs and checking badge 6 for topic: " + topic);
+                    FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
+                    InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+                    char[] inputBuffer = new char[READ_BLOCK_SIZE];
+                    String s = "";
+                    int charRead;
+
+                    while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                        // char to string conversion
+                        String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                        s += readstring;
+                    }
+                    InputRead.close();
+                    Log.i("INFO", "File contents: " + s);
+                    String rawData[] = s.split("%"); //each array represents a session
+                    //i is outside the foreach because i'm not looking for consecutive poms
+                    for (String data : rawData) {
+                        String tempArray[] = data.split("\\.");
+                        for (String element : tempArray) {
+                            if (element.equals("pom")){ i++; }
+                        }
+                        if (i >= numOfPomsRequired){
+                            weekList.get(7)[2] = "b6";
+                            Log.i("INFO", "Badge 6 Earned");
+                            return 1;
+                        }
+                        fileIn.close();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.i("INFO", "checkBadge6() failed");
+            }
+        }
         return 0;
     }
 
