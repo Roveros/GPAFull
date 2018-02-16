@@ -1,5 +1,7 @@
 package com.gpa.browne.gpafull;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -9,6 +11,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +43,15 @@ public class GoalsActivity extends AppCompatActivity {
         etGoalDaily = (EditText) findViewById(R.id.etGoalDaily);
         etGoalWeekly = (EditText) findViewById(R.id.etGoalWeekly);
         chbxSubjectComplete = (CheckBox) findViewById(R.id.chbxSubjectComplete);
+        chbxSubjectComplete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
+                if(tvSetDate.getText().toString().equals("DD/MM/YYYY HH:MM")){
+                    chbxSubjectComplete.setChecked(false);
+                    Toast.makeText(GoalsActivity.this, "You cannot set topic as complete without a deadline date", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         date = "DD/MM/YY";
         time = "HH:MM";
@@ -51,6 +63,9 @@ public class GoalsActivity extends AppCompatActivity {
         String settings[] = model.getGoals();
         etGoalDaily.setText(settings[1]);
         etGoalWeekly.setText(settings[2]);
+        if((settings[4].charAt(3) == ':')){
+            settings[4] = settings[4] + "0";
+        }
         tvSetDate.setText(settings[3] + " " + settings[4]);
         if(settings[5].equals("1")){
             chbxSubjectComplete.setChecked(true);
@@ -118,9 +133,29 @@ public class GoalsActivity extends AppCompatActivity {
 
     public void setTimeDisplay(String time){
         this.time = time;
+        if((time.charAt(3) == ':')){
+            time = time + "0";
+        }
         tvSetDate.setText(date + " " + this.time);
     }
 
+    public void onBet(View view) {
+        //Put up the Yes/No message box
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+                .setTitle("24 Hour Bet")
+                .setMessage("Would you like to bet 100 XP that this topic will be completed 24 hours before its deadline? \nPrize: 200 XP")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Yes button clicked, do something
+                        Toast.makeText(GoalsActivity.this, "Yes button pressed",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", null)						//Do nothing on no
+                .show();
+    }
 
 
     //set daily goal

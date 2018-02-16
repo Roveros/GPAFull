@@ -1,10 +1,12 @@
 package com.gpa.browne.gpafull;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -105,9 +107,42 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else if (id == R.id.action_email) {
             sendEmail();
+        } else if (id == R.id.action_select_topic) {
+            displayTopics();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void displayTopics() {
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Choose Topic");
+
+        final StringBuilder sb = new StringBuilder();
+        File myMainDir = getDir("logs", Context.MODE_PRIVATE);
+        File[] files = myMainDir.listFiles();
+        for (File inFile : files) {
+            if (inFile.isDirectory()) {
+                Log.i("INFO", inFile.getName());
+                sb.append(inFile.getName()+"\n");
+            }
+        }
+        sb.append("Exit");
+        final String[] types = sb.toString().split("\\n");
+
+        b.setItems(types, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+                if(!types[which].equals("Exit")){
+                    etSessionTitle.setText(types[which]);
+                }
+
+            }
+        });
+
+        b.show();
     }
 
     //Starts timer if not already started

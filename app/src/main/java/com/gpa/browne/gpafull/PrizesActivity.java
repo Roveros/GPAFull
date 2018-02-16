@@ -1,6 +1,7 @@
 package com.gpa.browne.gpafull;
 
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,12 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PrizesActivity extends AppCompatActivity {
@@ -25,6 +21,7 @@ public class PrizesActivity extends AppCompatActivity {
     TextView tvBalance;
     String[] prizes;
     int balance;
+    PrizeModel model;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +34,8 @@ public class PrizesActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
 
+        model = new PrizeModel(getApplicationContext());
+
         etEasyPrize = findViewById(R.id.etEasyPrize);
         etMediumPrize = findViewById(R.id.etMediumPrize);
         etHardPrize = findViewById(R.id.etHardPrize);
@@ -45,7 +44,7 @@ public class PrizesActivity extends AppCompatActivity {
         prizes = new String[]{"","","","0"};
         balance = 0;
 
-        initializeActivity();
+        detectSettings();
 
     }
     //This override is neede to allow for a back button on the toolbar for this activity
@@ -72,134 +71,86 @@ public class PrizesActivity extends AppCompatActivity {
             prizes[2] = etHardPrize.getText().toString();
         }
 
-        savePrizes();
+        model.savePrizes(prizes);
 
     }
 
     public void onClaimClick(View view) {
         //dialog box here plx
+        ArrayList<String> temp = new ArrayList<>();
+        for (int i = 100; i < 400; i += 100) {
+            if(!TextUtils.isEmpty(prizes[(i / 100) - 1])){
+                temp.add(prizes[(i / 100) - 1]);
+            }
+        }
+
+        if(temp.isEmpty()){
+            Toast.makeText(this, "No prizes listed. Please set prizes for 100, 150 and 200 XP.", Toast.LENGTH_SHORT).show();
+        } else {
+            CharSequence choices[] = temp.toArray(new CharSequence[temp.size()]);
+            //CharSequence choices[] = new CharSequence[] {prizes[0], prizes[1], prizes[2]};
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Pick a Prize");
+            builder.setItems(choices, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // the user clicked on colors[which]
+                    int cost = 0;
+
+                    switch (which){
+                        case 0 : cost = 100;
+                        break;
+                        case 1 : cost = 150;
+                        break;
+                        case 2 : cost = 200;
+                        break;
+                    }
+
+                    if(cost <= balance){
+                        Log.i("INFO", "Redeemed Prize");
+                        prizes[3] = String.valueOf((Integer.valueOf(prizes[3])) - cost);
+                        balance = (Integer.valueOf(prizes[3]) - cost);
+                        model.savePrizes(prizes);
+                        detectSettings();
+                        Toast.makeText(PrizesActivity.this, "You have redeemed: " + prizes[which], Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(PrizesActivity.this, "You do not have enough XP to redeem this prize.", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            });
+            builder.show();
+        }
     }
 
     public void onHelpClick(View view) {
         Toast.makeText(this, "Set your 100, 150 and 200 XP prizes and when you have enough XP CLAIM THEM!", Toast.LENGTH_LONG).show();
     }
 
-    public void initializeActivity(){
-        //read/create prizes.txt
-        //load values for editetexts
-        //create an alert dialogue for claiming prizes if they are not empty
-        //get xp balance
-        detectSettings();
-
-
-    }
-
     private void detectSettings() {
-        File myMainDir = getApplicationContext().getDir("prizes", Context.MODE_PRIVATE);
-
-        File myFinalDir = new File(myMainDir, "prizes.txt");
-
-        if (myFinalDir.exists()){
-            Log.i("INFO","Prizes.txt detected");
-            Log.i("INFO", "Path: "+ myFinalDir.getAbsolutePath());
-            Log.i("INFO", "File name: " + myFinalDir.getName());
-
-            //parse prizes
-            //reading text from file
+        prizes = model.getprizes();
+        Log.i("INFO", Arrays.toString(prizes));
+        if(!prizes[0].isEmpty()){
+            etEasyPrize.setText(prizes[0]);
+        }
+        if(!prizes[1].isEmpty()){
+            etMediumPrize.setText(prizes[1]);
+        }
+        if(!prizes[2].isEmpty()){
+            etHardPrize.setText(prizes[2]);
+        }
+        if(!prizes[3].isEmpty()) {
             try {
-                Log.i("INFO", "Retrieving prizes...");
-                FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
-                InputStreamReader isr = new InputStreamReader(fis);
-                BufferedReader bufferedReader = new BufferedReader(isr);
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    sb.append(line);
-                }
-                Log.i("INFO", "Prizes Retrieved.");
-                Log.i("INFO", "File contents: " + sb.toString());
-                fis.close();
-                prizes = sb.toString().split("@");
-                Log.i("INFO", Arrays.toString(prizes));
-                if(!prizes[0].isEmpty()){
-                    etEasyPrize.setText(prizes[0]);
-                }
-                if(!prizes[1].isEmpty()){
-                    etMediumPrize.setText(prizes[1]);
-                }
-                if(!prizes[2].isEmpty()){
-                    etHardPrize.setText(prizes[2]);
-                }
-                if(!prizes[3].isEmpty()) {
-                    try {
-                        //balance = Integer.valueOf(prizes[3]);
-                        balance = Integer.valueOf("250");
-                        tvBalance.setText("Current Balance: " + balance + " XP");
-                    } catch (Exception e) {
-                        Log.i("INFO", "Error converting balance from string to int");
-                        tvBalance.setText("Current Balance: " + balance + " XP");
-                    }
-                }
+                //****************************debug balance**********************
+                balance = Integer.valueOf(prizes[3]);
+                //balance = Integer.valueOf("250");
+                //prizes[3] = "250";
+                tvBalance.setText("Current Balance: " + balance + " XP");
             } catch (Exception e) {
-                Log.i("INFO", "Unable to retrieve settings.");
-                Log.i("INFO", e.getMessage());
-                e.printStackTrace();
+                Log.i("INFO", "Error converting balance from string to int");
+                tvBalance.setText("Current Balance: " + balance + " XP");
             }
-        } else {
-            Log.i("INFO","Prizes.txt not detected, default prizes generated");
-            savePrizes();
         }
     }
-/*
-    // add-write text into file
-    String settings = "";
-    settings = "shortBreakLength:"+shortBreakLength+"@longBreakLength:"+longBreakLength+"@pomLength:"+pomLength+"";
-        Log.i("INFO", "Saving new settings ...");
-
-        try {
-        File myMainDir = context.getDir("settings", Context.MODE_PRIVATE);
-
-        myMainDir.mkdir();
-
-        File myFinalDir = new File(myMainDir, "settings.txt");
-
-        FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
-        OutputStreamWriter outputWriter = new OutputStreamWriter(out);
-        outputWriter.write(settings);
-        outputWriter.close();
-
-        Log.i("INFO",settings);
-
-    } catch (Exception e) {
-        Log.i("INFO", "Failed to save new settings");
-        e.printStackTrace();
-    }
-}*/
-
-    public void savePrizes(){
-        // add-write text into file
-
-        String prizesData = "";
-        prizesData = prizes[0] + "@" + prizes[1] + "@" +prizes[2] + "@" + prizes[3] ;
-
-        try {
-            File myMainDir = getApplicationContext().getDir("prizes", Context.MODE_PRIVATE);
-
-            myMainDir.mkdir();
-
-            File myFinalDir = new File(myMainDir, "prizes.txt");
-
-            FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
-            OutputStreamWriter outputWriter = new OutputStreamWriter(out);
-            outputWriter.write(prizesData);
-            outputWriter.close();
-            Log.i("INFO", "Prizes Saved");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    //set low medium and high rewards
-    //record if earned for that week or not
-
 }

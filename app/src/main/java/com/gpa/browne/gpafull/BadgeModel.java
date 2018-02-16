@@ -33,12 +33,14 @@ public class BadgeModel {
     private int today;
     Calendar cal, calToday;
     static final int READ_BLOCK_SIZE = 100;
+    PrizeModel pModel;
 
     public BadgeModel(Context context, String topic){
         this.topic=topic;
         this.context = context;
         firstDayOfThisWeek = getFirstDayOfThisWeek();
         badges = new String[]{"0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"};
+        pModel = new PrizeModel(context);
         getBadgeData();
 
     }
@@ -380,6 +382,9 @@ public class BadgeModel {
             //weeklist -> monday = [0]
             weekList.get(today)[0] = "b1";
             showBadgeDialogue("b1");
+            pModel = null;
+            pModel= new PrizeModel(context);
+            pModel.addXP(10);
             return 1;
         }
     }
@@ -426,6 +431,9 @@ public class BadgeModel {
                     if (i >= 4){
                         weekList.get(today)[1] = "b2";
                         showBadgeDialogue("b2");
+                        pModel = null;
+                        pModel= new PrizeModel(context);
+                        pModel.addXP(20);
                         return 1;
                     }
                     fileIn.close();
@@ -482,6 +490,9 @@ public class BadgeModel {
                     if(!weekList.get(today).equals("b3")){
                         weekList.get(7)[0] = "b3";
                         showBadgeDialogue("b3");
+                        pModel = null;
+                        pModel= new PrizeModel(context);
+                        pModel.addXP(30);
                         return 1;
                     }
                 }
@@ -538,6 +549,9 @@ public class BadgeModel {
                     if (weekList.get(today)[1].equals("b2")) {
                         weekList.get(7)[1] = "b4";
                         showBadgeDialogue("b4");
+                        pModel = null;
+                        pModel= new PrizeModel(context);
+                        pModel.addXP(50);
                         return 1;
                     }
                 }
@@ -612,6 +626,9 @@ public class BadgeModel {
                             weekList.get(today)[2] = "b5";
                             Log.i("INFO", "Badge 5 Earned");
                             showBadgeDialogue("b5");
+                            pModel = null;
+                            pModel= new PrizeModel(context);
+                            pModel.addXP(30);
                             return 1;
                         }
                         fileIn.close();
@@ -726,6 +743,9 @@ public class BadgeModel {
                                 weekList.get(7)[2] = "b6";
                                 Log.i("INFO", "Badge 6 Earned");
                                 showBadgeDialogue("b6");
+                                pModel = null;
+                                pModel= new PrizeModel(context);
+                                pModel.addXP(250);
                                 return 1;
                             }
                             fileIn.close();
@@ -777,6 +797,9 @@ public class BadgeModel {
                         weekList.get(7)[3] = "b7";
                         Log.i("INFO", "Badge 7 Earned");
                         showBadgeDialogue("b7");
+                        pModel = null;
+                        pModel= new PrizeModel(context);
+                        pModel.addXP(200);
                         return 1;
 
                     }
