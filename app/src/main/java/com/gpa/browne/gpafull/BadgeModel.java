@@ -1,7 +1,10 @@
 package com.gpa.browne.gpafull;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.Log;
+import android.widget.ImageView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +80,46 @@ public class BadgeModel {
         }
 
         return 0;
+    }
+
+    public void showBadgeDialogue(String badgeNumber){
+        //Code for displaying an image in a alert dialogue
+        ImageView image = new ImageView(context);
+
+        switch (badgeNumber) {
+            case "b1":
+                image.setImageResource(R.drawable.b1);
+                break;
+            case "b2":
+                image.setImageResource(R.drawable.b2);
+                break;
+            case "b3":
+                image.setImageResource(R.drawable.b3);
+                break;
+            case "b4":
+                image.setImageResource(R.drawable.b4);
+                break;
+            case "b5":
+                image.setImageResource(R.drawable.b5);
+                break;
+            case "b6":
+                image.setImageResource(R.drawable.b6);
+                break;
+            case "b7":
+                image.setImageResource(R.drawable.b7);
+                break;
+        }
+
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(context).
+                        setPositiveButton("COLLECT BADGE", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        }).
+                        setView(image);
+        builder.create().show();
     }
 
     //looks for .txt file with badge data for the given topic
@@ -288,7 +332,7 @@ public class BadgeModel {
         }
 
         //-----------------------------------DEBUG BADGES-----------------------------------//
-        badges[13] = "b1";     //friday
+/*        badges[13] = "b1";     //friday
         badges[4] = "b1";     //tuesday
         badges[7] = "b1";     //wednesday
         badges[10] = "b1";     //thursday
@@ -296,7 +340,7 @@ public class BadgeModel {
         badges[14] = "b2";     //friday
         badges[5] = "b2";     //tuesday
         badges[8] = "b2";     //wednesday
-        badges[11] = "b2";     //thursday
+        badges[11] = "b2";     //thursday*/
 
         //badges[13] = "b1";     //friday
         //-----------------------------------DEBUG BADGES-----------------------------------//
@@ -335,6 +379,7 @@ public class BadgeModel {
         } else {
             //weeklist -> monday = [0]
             weekList.get(today)[0] = "b1";
+            showBadgeDialogue("b1");
             return 1;
         }
     }
@@ -380,6 +425,7 @@ public class BadgeModel {
                     }
                     if (i >= 4){
                         weekList.get(today)[1] = "b2";
+                        showBadgeDialogue("b2");
                         return 1;
                     }
                     fileIn.close();
@@ -435,8 +481,9 @@ public class BadgeModel {
                 if (i == 4){
                     if(!weekList.get(today).equals("b3")){
                         weekList.get(7)[0] = "b3";
+                        showBadgeDialogue("b3");
+                        return 1;
                     }
-                    return 1;
                 }
                 fileIn.close();
 
@@ -450,6 +497,7 @@ public class BadgeModel {
 
     public int checkBadge4(){
         if(hasBadge("b4")){
+            Log.i("INFO", "b4");
             return 1;
         } else {
             //reading text from file
@@ -489,6 +537,7 @@ public class BadgeModel {
                 if (i == 4) {
                     if (weekList.get(today)[1].equals("b2")) {
                         weekList.get(7)[1] = "b4";
+                        showBadgeDialogue("b4");
                         return 1;
                     }
                 }
@@ -503,149 +552,40 @@ public class BadgeModel {
     }
 
     public int checkBadge5(){
-        //get model to give goal data
-        GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
-        String goals[] = modelGoal.getThisWeeksGoals();
+        if(!hasBadge("b5")){
+            //get model to give goal data
+            GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
+            String goals[] = modelGoal.getThisWeeksGoals();
 
-        Log.i("INFO", "Goals from model: "+ Arrays.toString(goals));
+            Log.i("INFO", "Goals from model: "+ Arrays.toString(goals));
 
-        //if valid goal detected
-        if ((Integer.valueOf(goals[1]) >= 1) && !hasBadge("b5")){
-            Log.i("INFO", "Does not have badge 5. Goal is greater than 1 hour per day: " + goals[1]);
+            //if valid goal detected
+            if ((Integer.valueOf(goals[1]) >= 1) && !hasBadge("b5")){
+                Log.i("INFO", "Does not have badge 5. Goal is greater than 1 hour per day: " + goals[1]);
 
-            //get number of minutes per goal
-            int goalInMinutes = Integer.valueOf(goals[1]) * 60;
-            int numOfPomsRequired;
+                //get number of minutes per goal
+                int goalInMinutes = Integer.valueOf(goals[1]) * 60;
+                int numOfPomsRequired;
 
-            if((goalInMinutes % 25) == 0){
-                numOfPomsRequired = (goalInMinutes / 25);
-            } else {
-                numOfPomsRequired = (goalInMinutes / 25) + 1;
-            }
-
-            Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
-
-            //Check todays logs and see how many "pom"
-            try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                String fileName = dateFormat.format(calToday.getTime()) + ".txt";
-
-                File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
-                File mySubDir = new File(myMainDir, topic);
-                // mySubDir.mkdir();
-                File myFinalDir = new File(mySubDir, fileName);
-
-                Log.i("INFO", "Retrieving logs and checking badge 5 for topic: " + topic);
-                FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
-                InputStreamReader InputRead = new InputStreamReader(fileIn);
-
-                char[] inputBuffer = new char[READ_BLOCK_SIZE];
-                String s = "";
-                int charRead;
-
-                while ((charRead = InputRead.read(inputBuffer)) > 0) {
-                    // char to string conversion
-                    String readstring = String.copyValueOf(inputBuffer, 0, charRead);
-                    s += readstring;
+                if((goalInMinutes % 25) == 0){
+                    numOfPomsRequired = (goalInMinutes / 25);
+                } else {
+                    numOfPomsRequired = (goalInMinutes / 25) + 1;
                 }
-                InputRead.close();
-                Log.i("INFO", "File contents: " + s);
-                String rawData[] = s.split("%"); //each array represents a session
-                //i is outside the foreach because i'm not looking for consecutive poms
-                int i = 0;
-                for (String data : rawData) {
-                    String tempArray[] = data.split("\\.");
-                    for (String element : tempArray) {
-                        if (element.equals("pom")){ i++; }
-                    }
-                    if (i >= numOfPomsRequired){
-                        weekList.get(today)[2] = "b5";
-                        Log.i("INFO", "Badge 5 Earned");
-                        return 1;
-                    }
-                    fileIn.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.i("INFO", "checkBadge5() failed");
-            }
-        }
-        return 0;
-    }
 
-    public int checkBadge6(){
-        //identify first day of this week. I need to get every file that is on or after that date. Count poms
+                Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
 
-        //get model to give goal data
-        GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
-        String goals[] = modelGoal.getThisWeeksGoals();
-
-        Log.i("INFO", "Goals from model for badge 6: "+ Arrays.toString(goals));
-
-        File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
-        File mySubDir = new File(myMainDir, topic);
-
-        if(!mySubDir.exists()){
-            mySubDir.mkdir();
-        }
-
-        ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
-        File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
-        for (File file : filesInFolder) { //For each of the entries do:
-            Date tempDate =null;
-            Calendar tempCal = cal;
-
-            if (!file.isDirectory()) { //check that it's not a dir
-                //check date
-                //Date
-                Log.i("INFO", "File in directory: "+ file.getName());
-
-                try{
-                    //remove the .txt from the end
-                    String date = file.getName().substring(0, (file.getName().length() - 4));
+                //Check todays logs and see how many "pom"
+                try {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    tempDate = dateFormat.parse(date);
-                    //create a temp date 50 seconds before start of week for checking for this weeks' files
-                    tempCal.add(Calendar.SECOND, -50);
-                    if(tempDate.after(tempCal.getTime())){
-                        Log.i("INFO", "File " + tempDate.toString() + " after " +tempCal.getTime());
-                        files.add(new String(file.getName())); //push the filename as a string
-                    } else {
-                        Log.i("INFO", "File " + tempDate.toString() + " not after " +tempCal.getTime());
-                    }
-                } catch (Exception e){
-                    Log.i("INFO", "Error comparing dates: " + tempDate.getTime() + " and " +tempCal.getTime());
-                }
-            }
-        }
-        //if valid goal detected
-        if ((Integer.valueOf(goals[2]) >= 4) && !hasBadge("b6") && !files.isEmpty()){
-            Log.i("INFO", "Does not have badge 6. Goal is greater than 4 hour per day: " + goals[2]);
+                    String fileName = dateFormat.format(calToday.getTime()) + ".txt";
 
-            //get number of minutes per goal
-            int goalInMinutes = Integer.valueOf(goals[2]) * 60;
-            int numOfPomsRequired;
+                    File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
+                    File mySubDir = new File(myMainDir, topic);
+                    // mySubDir.mkdir();
+                    File myFinalDir = new File(mySubDir, fileName);
 
-            if((goalInMinutes % 25) == 0){
-                numOfPomsRequired = (goalInMinutes / 25);
-            } else {
-                numOfPomsRequired = (goalInMinutes / 25) + 1;
-            }
-
-            Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
-
-            //Check todays logs and see how many "pom"
-            try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                //String fileName = dateFormat.format(calToday.getTime()) + ".txt";
-
-                int i = 0;
-                //for each file, read log and count poms
-                for (String file : files) {
-
-                    File myFinalDir = new File(mySubDir, file);
-
-                    Log.i("INFO", "Retrieving logs and checking badge 6 for topic: " + topic);
+                    Log.i("INFO", "Retrieving logs and checking badge 5 for topic: " + topic);
                     FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
                     InputStreamReader InputRead = new InputStreamReader(fileIn);
 
@@ -662,39 +602,197 @@ public class BadgeModel {
                     Log.i("INFO", "File contents: " + s);
                     String rawData[] = s.split("%"); //each array represents a session
                     //i is outside the foreach because i'm not looking for consecutive poms
+                    int i = 0;
                     for (String data : rawData) {
                         String tempArray[] = data.split("\\.");
                         for (String element : tempArray) {
                             if (element.equals("pom")){ i++; }
                         }
                         if (i >= numOfPomsRequired){
-                            weekList.get(7)[2] = "b6";
-                            Log.i("INFO", "Badge 6 Earned");
+                            weekList.get(today)[2] = "b5";
+                            Log.i("INFO", "Badge 5 Earned");
+                            showBadgeDialogue("b5");
                             return 1;
                         }
                         fileIn.close();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.i("INFO", "checkBadge5() failed");
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.i("INFO", "checkBadge6() failed");
             }
+        } else {
+            Log.i("INFO", "Badge 5 Found.");
+        }
+        return 0;
+    }
+
+    public int checkBadge6(){
+        //identify first day of this week. I need to get every file that is on or after that date. Count poms
+
+        if(!hasBadge("b6")){
+            //get model to give goal data
+            GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
+            String goals[] = modelGoal.getThisWeeksGoals();
+
+            Log.i("INFO", "Goals from model for badge 6: "+ Arrays.toString(goals));
+
+            File myMainDir = context.getDir("logs", Context.MODE_PRIVATE);
+            File mySubDir = new File(myMainDir, topic);
+
+            if(!mySubDir.exists()){
+                mySubDir.mkdir();
+            }
+
+            ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
+            File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
+            for (File file : filesInFolder) { //For each of the entries do:
+                Date tempDate =null;
+                Calendar tempCal = cal;
+
+                if (!file.isDirectory()) { //check that it's not a dir
+                    //check date
+                    //Date
+                    Log.i("INFO", "File in directory: "+ file.getName());
+
+                    try{
+                        //remove the .txt from the end
+                        String date = file.getName().substring(0, (file.getName().length() - 4));
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        tempDate = dateFormat.parse(date);
+                        //create a temp date 50 seconds before start of week for checking for this weeks' files
+                        tempCal.add(Calendar.SECOND, -50);
+                        if(tempDate.after(tempCal.getTime())){
+                            Log.i("INFO", "File " + tempDate.toString() + " after " +tempCal.getTime());
+                            files.add(new String(file.getName())); //push the filename as a string
+                        } else {
+                            Log.i("INFO", "File " + tempDate.toString() + " not after " +tempCal.getTime());
+                        }
+                    } catch (Exception e){
+                        Log.i("INFO", "Error comparing dates: " + tempDate.getTime() + " and " +tempCal.getTime());
+                    }
+                }
+            }
+            //if valid goal detected
+            if ((Integer.valueOf(goals[2]) >= 4) && !hasBadge("b6") && !files.isEmpty()){
+                Log.i("INFO", "Does not have badge 6. Goal is greater than 4 hour per day: " + goals[2]);
+
+                //get number of minutes per goal
+                int goalInMinutes = Integer.valueOf(goals[2]) * 60;
+                int numOfPomsRequired;
+
+                if((goalInMinutes % 25) == 0){
+                    numOfPomsRequired = (goalInMinutes / 25);
+                } else {
+                    numOfPomsRequired = (goalInMinutes / 25) + 1;
+                }
+
+                Log.i("INFO", "Number of poms required: " + numOfPomsRequired);
+
+                //Check todays logs and see how many "pom"
+                try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    //String fileName = dateFormat.format(calToday.getTime()) + ".txt";
+
+                    int i = 0;
+                    //for each file, read log and count poms
+                    for (String file : files) {
+
+                        File myFinalDir = new File(mySubDir, file);
+
+                        Log.i("INFO", "Retrieving logs and checking badge 6 for topic: " + topic);
+                        FileInputStream fileIn = new FileInputStream(new File(myFinalDir.getPath()));
+                        InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+                        char[] inputBuffer = new char[READ_BLOCK_SIZE];
+                        String s = "";
+                        int charRead;
+
+                        while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                            // char to string conversion
+                            String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                            s += readstring;
+                        }
+                        InputRead.close();
+                        Log.i("INFO", "File contents: " + s);
+                        String rawData[] = s.split("%"); //each array represents a session
+                        //i is outside the foreach because i'm not looking for consecutive poms
+                        for (String data : rawData) {
+                            String tempArray[] = data.split("\\.");
+                            for (String element : tempArray) {
+                                if (element.equals("pom")){ i++; }
+                            }
+                            if (i >= numOfPomsRequired){
+                                weekList.get(7)[2] = "b6";
+                                Log.i("INFO", "Badge 6 Earned");
+                                showBadgeDialogue("b6");
+                                return 1;
+                            }
+                            fileIn.close();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.i("INFO", "checkBadge6() failed");
+                }
+            }
+        }  else {
+            Log.i("INFO", "Badge 6 Found.");
         }
         return 0;
     }
 
     public int checkBadge7(){
+        //is the deadline completed checkbox checked
+        //do they have the badge already?
+        //is it 24 hours before the deadline date
+
+        if(!hasBadge("b7")){
+            //get model to give goal data
+            GPAGoalModel modelGoal = new GPAGoalModel(context, topic);
+            String goals[] = modelGoal.getThisWeeksGoals();
+
+            Log.i("INFO", "Goals from model for badge 7: "+ Arrays.toString(goals));
+
+            if(goals[5].equals("1")){
+                Log.i("INFO", "Topic Completed");
+                Log.i("INFO", "Date: " + goals[3] + ", Time: " + goals[4]);
+
+                //check if date is dd/mm/yyy HH:SS,
+                try{
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    Date tempDate = dateFormat.parse(goals[3] + " " + goals[4] + ":00");
+                    Log.i("INFO", "Temp Date" + tempDate.toString());
+
+                    Calendar requiredDate = Calendar.getInstance();
+                    Calendar now = Calendar.getInstance();
+                    requiredDate.setTime(tempDate);
+                    requiredDate.add(Calendar.DAY_OF_YEAR, -1);
+                    Log.i("INFO", "Required Completion Date: " + requiredDate.getTime().toString());
+
+                    if (now.getTime().after(requiredDate.getTime())){
+                        Log.i("INFO", "Deadline Passed, not eligible for badge 7");
+                    } else {
+                        Log.i("INFO", "Eligible for badge 7");
+                        weekList.get(7)[3] = "b7";
+                        Log.i("INFO", "Badge 7 Earned");
+                        showBadgeDialogue("b7");
+                        return 1;
+
+                    }
+
+
+                } catch (ParseException ex){
+                    Log.i("INFO", "Parse Exception");
+                    System.err.println(ex);
+                }
+
+            } else {
+                Log.i("INFO", "Topic Not Completed");
+            }
+        }  else {
+            Log.i("INFO", "Badge 7 Found.");
+        }
         return 0;
     }
-
-
-    /**
-     * Pom completes
-     * Check for achievements
-     * getBadgeData()
-     * check b1 - b7, skip checks for badges already earned
-     * add new badges where applicable
-     * persist
-     */
-
 }

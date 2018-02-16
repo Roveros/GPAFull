@@ -1,12 +1,10 @@
 package com.gpa.browne.gpafull;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -15,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,9 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -106,12 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Cannot set goals without a session topic.", Toast.LENGTH_SHORT).show();
             }
         } else if (id == R.id.action_prizes) {
-            Toast.makeText(this, "Prize Page Loads", Toast.LENGTH_SHORT).show();
-            config = new GPAConfigModel(this);
             Intent intent = new Intent(this, PrizesActivity.class);
-            intent.putExtra("shortBreakLength", config.getShortBreakLength());
-            intent.putExtra("longBreakLength", config.getLongBreakLength());
-            intent.putExtra("pomLength", config.getPomLength());
             startActivity(intent);
         } else if (id == R.id.action_email) {
             sendEmail();
