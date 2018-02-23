@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,8 +22,9 @@ import java.util.Arrays;
 public class GoalsActivity extends AppCompatActivity {
 
     private TextView tvSetDate;
-    private String date, time, topic;
+    private String date, time, topic, bet;
     private GPAGoalModel model;
+    private PrizeModel pModel;
     private EditText etGoalDaily, etGoalWeekly;
     private CheckBox chbxSubjectComplete;
 
@@ -55,12 +57,16 @@ public class GoalsActivity extends AppCompatActivity {
 
         date = "DD/MM/YY";
         time = "HH:MM";
+        bet = "0";
 
         Intent intent = getIntent();
         topic = intent.getStringExtra("topic");
         model = new GPAGoalModel(getApplicationContext(), topic);
+        pModel = new PrizeModel(getApplicationContext());
         //date@1@8@10/03/2018@11:55@0
         String settings[] = model.getGoals();
+
+
         etGoalDaily.setText(settings[1]);
         etGoalWeekly.setText(settings[2]);
         if((settings[4].charAt(3) == ':')){
@@ -72,6 +78,7 @@ public class GoalsActivity extends AppCompatActivity {
         } else {
             chbxSubjectComplete.setChecked(false);
         }
+        bet = settings[6];
     }
 
     //This override is needed to allow for a back button on the toolbar for this activity
@@ -108,10 +115,32 @@ public class GoalsActivity extends AppCompatActivity {
             completed = "0";
         }
 
-        model.saveSettings(dailyGoal, weeklyGoal, deadlineDate, deadlineTime, completed);
+        //how do i get previous setting for bet?
+
+        String temp[] =  new GPAGoalModel(getApplicationContext(), topic).getGoals();
+        if (temp[6].equals("1")){
+            bet = "1";
+        }
+
+        int b7 = model.saveSettings(dailyGoal, weeklyGoal, deadlineDate, deadlineTime, completed, bet);
+        if(b7 == 1){
+            ImageView image = new ImageView(GoalsActivity.this);
+            image.setImageResource(R.drawable.b7);
+            AlertDialog.Builder builder =
+                    new AlertDialog.Builder(GoalsActivity.this).
+                            setPositiveButton("COLLECT BADGE", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    Toast.makeText(getApplicationContext(), "Saving ... ",Toast.LENGTH_SHORT).show();
+                                    finish();
+                                }
+                            }).
+                            setView(image);
+            builder.create().show();
+        }
         Toast.makeText(getApplicationContext(), "Saving ... ",Toast.LENGTH_SHORT).show();
         finish();
-
     }
 
     public void onClickShowTimePicker(View view) {
@@ -149,19 +178,26 @@ public class GoalsActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //Yes button clicked, do something
-                        Toast.makeText(GoalsActivity.this, "Yes button pressed",
-                                Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(GoalsActivity.this, "Yes button pressed", Toast.LENGTH_SHORT).show();
+                        //do they have 100 xp?
+                        //modify goals data for extra field
+                        //add check to deadline badge 7 to see if bet was taken
+                        String prizes[] = pModel.getprizes();
+                        if(Integer.valueOf(prizes[3]) >= 100){
+                            bet = "1";
+                            pModel.addXP(-100);
+
+                            String goals [] = model.getGoals();
+                            goals[6] = "1";
+                            model.saveSettings(goals[1],goals[2],goals[3],goals[4],goals[5], goals[6]);
+                            Toast.makeText(GoalsActivity.this, "Bet Placed", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(GoalsActivity.this, "You do not have enough XP to place this wager", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 })
                 .setNegativeButton("No", null)						//Do nothing on no
                 .show();
     }
-
-
-    //set daily goal
-    //set weekly goal
-    //set deadline date
-    //set topic complete
-
-
 }

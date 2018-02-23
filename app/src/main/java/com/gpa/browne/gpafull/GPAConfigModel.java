@@ -77,6 +77,11 @@ public class GPAConfigModel {
         }
     }
 
+    public String getSettings(){
+        String settings = pomLength +"."+ shortBreakLength +"."+ longBreakLength;
+        return settings;
+    }
+
     public void createDefaultSettings(){
         // add-write text into file
 

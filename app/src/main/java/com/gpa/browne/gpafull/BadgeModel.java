@@ -3,8 +3,10 @@ package com.gpa.browne.gpafull;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,16 +43,260 @@ public class BadgeModel {
         firstDayOfThisWeek = getFirstDayOfThisWeek();
         badges = new String[]{"0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"};
         pModel = new PrizeModel(context);
-        getBadgeData();
-
+        if(!TextUtils.isEmpty(topic)){
+            getBadgeData();
+        }
     }
+
+    //this method finds the most recent badge data text file
+    //if it is not from this week then it creates a default data file for this week
+    public int getBadgeData(){
+
+        //this gives the filename of the data file for this week we are looking for
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String thisWeeksBadgeData = dateFormat.format(cal.getTime());
+
+        //this navigate to and if nessesary, creates the topic folder in the badges directory
+        File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
+        File mySubDir = new File(myMainDir, topic);
+        if(!mySubDir.exists()){
+            mySubDir.mkdir();
+        }
+
+        //this creates an array of files from the above location
+        ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
+        File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
+        for (File file : filesInFolder) { //For each of the entries do:
+            if (!file.isDirectory()) { //check that it's not a dir
+                files.add(new String(file.getName())); //push the filename as a string
+            }
+        }
+
+        if(files.isEmpty()){
+            Log.i("INFO","Badges.txt could not be detected. Generating default badges.txt");
+            //create default data for this week.
+            createDefaultBadges();
+            badgesList.add(badges);
+            } else {
+            // for each file in the file array ...
+            for (String file : files ) {
+                File myFinalDir = new File(mySubDir, file);
+                Log.i("INFO", "Searching for " + file + " ...");
+
+                //if the file exists
+                if (myFinalDir.exists()) {
+                    Log.i("INFO", "File detected.");
+                    Log.i("INFO", "Path: " + myFinalDir.getAbsolutePath());
+                    Log.i("INFO", "File name: " + myFinalDir.getName());
+
+                    //Data tokenised as:
+                    //@Date.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b3.b4.b6.b7
+                    //try to read the file contents to a string builder
+                    try {
+                        Log.i("INFO", "Attempting to retrieving badge data ...");
+                        FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
+                        InputStreamReader isr = new InputStreamReader(fis);
+                        BufferedReader bufferedReader = new BufferedReader(isr);
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            sb.append(line);
+                        }
+                        Log.i("INFO", "Badge data retrieved successfully.");
+                        Log.i("INFO", "File contents: " + sb.toString());
+                        fis.close();
+
+                        //Data is split week by week by the @ token
+                        String[] rawBadgeData = sb.toString().split("@");
+
+
+                        //this fills the badge array with the contents of that weeks array i.e
+                        //Date.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b3.b4.b6.b7
+                        //this array is added to an array list
+                        for (String badgeData : rawBadgeData) {
+                            Log.i("INFO", "Badges[] contents pre write: " + Arrays.toString(badges));
+                            Log.i("INFO", "rawBadgeData - badgeData: " + badgeData);
+
+                            //split the data by variable
+                            badges = badgeData.split("\\.");
+                            badgesList.add(badges);
+                            Log.i("INFO", "Badges[] contents post write: " + Arrays.toString(badges));
+                        }
+                    } catch (Exception e) {
+                        Log.i("INFO", "Unable to retrieve badge data.");
+                        Log.i("INFO", e.getMessage());
+                        e.printStackTrace();
+                    }
+
+    /*                //ensure this weeks data is in badges[] if it is present
+                    for (String badgeData[] : badgesList) {
+                        try{
+                            //SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                            //Date tempDate = dateFormat.parse(goals[3] + " " + goals[4] + ":00");
+
+                            DateFormat df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy", Locale.ENGLISH);
+                            Date testDate =  df.parse(badgeData[0]);
+
+                            Calendar weekStarting = cal;
+                            Calendar badgeDate = Calendar.getInstance();
+                            badgeDate.setTime(testDate);
+
+                            Log.i("INFO", "Comparing Dates: " + badgeDate.getTime().toString() + " to " + weekStarting.getTime().toString());
+                            if(weekStarting.getTime() == badgeDate.getTime()){
+                                Log.i("INFO", "Dates match, loading this weeks data in array");
+                                badges = badgeData;
+                            }
+
+                        Log.i("INFO", "Badges[] contents populated with this weeks data");
+                        } catch (Exception e){
+                            Log.i("INFO", "Failed to parse date from data");
+                        }
+                    }*/
+                } else {
+                    Log.i("INFO", "Badges.txt could not be detected. Generating default badges.txt");
+                    //create default data for this week.
+                    createDefaultBadges();
+                    badgesList.add(badges);
+                }
+
+                //get this weeks data if it exists
+                try {
+                    Log.i("INFO", "BadgeList size: " + badgesList.size());
+                    for (String badgeData[] : badgesList) {
+                        Log.i("INFO", "Comparing badgeData[0]: " + badgeData[0].toString() + " to first day: " + firstDayOfThisWeek);
+                        if (badgeData[0].equals(firstDayOfThisWeek)) {
+                            Log.i("INFO", "badge data containing date: " + firstDayOfThisWeek);
+                            badges = badgeData;
+                            Log.i("INFO", "badges[] contents: " + Arrays.toString(badges));
+                        } else {
+                            //Only set badges to default if it is not currently set to THIS weeks' monday
+                            if (!badges[0].equals(firstDayOfThisWeek)) {
+                                //badges = new String[]{firstDayOfThisWeek,"","","","","",""};
+                                badges = new String[]{firstDayOfThisWeek, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.i("INFO", "Error detecting first day of the week within badges[]");
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    public ArrayList<String[]> getAllBadgeData(){
+        return badgesList;
+    }
+
+    private String getFirstDayOfThisWeek(){
+        // get today and clear time of day
+        //must use uk local to get monday as first day instead of sunday
+        cal = Calendar.getInstance(new Locale("en","UK"));
+        cal.set(Calendar.HOUR_OF_DAY, 0); // ! clear would not reset the hour of day !
+        cal.clear(Calendar.MINUTE);
+        cal.clear(Calendar.SECOND);
+        cal.clear(Calendar.MILLISECOND);
+
+        // get start of this week
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+
+        calToday = Calendar.getInstance(new Locale("en","UK"));
+        today = calToday.get(Calendar.DAY_OF_WEEK) - 2;
+
+        return cal.getTime().toString();
+    }
+
+    public void createDefaultBadges(){
+
+        //give the array the correct week starting date
+        badges[0] = firstDayOfThisWeek;
+
+        //create the text string from the array data
+        String badgeDefaultString = "";
+        for (String value: badges) {
+            badgeDefaultString += value + ".";
+        }
+        //remove the last '.' from the string
+        badgeDefaultString = badgeDefaultString.substring(0, badgeDefaultString.length()-1);
+
+        Log.i("INFO-createDfltBdgs","Generating default badge.txt from badges[]: " + badgeDefaultString);
+        String fileName = "";
+        try {
+            //create a filename with mondays date (first day of week)
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            fileName = dateFormat.format(cal.getTime()) + ".txt";
+
+            //navigate to and create if necessary, topic folder in badges directory
+            File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
+            File mySubDir = new File(myMainDir, topic);
+            mySubDir.mkdir();
+            File myFinalDir = new File(mySubDir, fileName);
+
+            FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
+            OutputStreamWriter outputWriter = new OutputStreamWriter(out);
+            outputWriter.write(badgeDefaultString);
+            outputWriter.close();
+            Log.i("INFO-createDfltBdgs","Generating " + fileName + " ...");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.i("INFO-createDfltBdgs","Error Generating " + fileName + " ...");
+        }
+    }
+
 
     //When persisting the model for badges is checked and updated then new data is appended
     //badgeNumber is the new badge earned to be persisted
     public int persist (){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String fileName = dateFormat.format(cal.getTime()) + ".txt";
 
+        //give the array the correct week starting date
+        badges[0] = firstDayOfThisWeek;
+
+        //create the text string from the array data
+        String badgePersistString = "";
+        for (String value: badges) {
+            badgePersistString += value + ".";
+        }
+        //remove the last ':' from the string
+        badgePersistString = badgePersistString.substring(0, badgePersistString.length()-1);
+
+        Log.i("INFO-persist","Generating badge.txt from badges[] ... ");
+        String fileName = "";
+        try {
+            //create a filename with mondays date (first day of week)
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            fileName = dateFormat.format(cal.getTime()) + ".txt";
+
+            Log.i("INFO-persist","Calender time: " + cal.getTime().toString());
+           // getFirstDayOfThisWeek();
+           // Log.i("INFO-persist","NOW Calender time: " + cal.getTime().toString());
+
+            Log.i("INFO-persist","Persisting badge data as " + fileName);
+
+            //navigate to and create if necessary, topic folder in badges directory
+            File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
+            File mySubDir = new File(myMainDir, topic);
+            mySubDir.mkdir();
+            File myFinalDir = new File(mySubDir, fileName);
+
+            FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
+            OutputStreamWriter outputWriter = new OutputStreamWriter(out);
+            outputWriter.write(badgePersistString);
+            outputWriter.close();
+            Log.i("INFO-persist","Generating " + fileName + " ...");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.i("INFO-persist","Error Generating " + fileName + " ...");
+        }
+
+
+
+
+ /*       //create a filename with mondays date (first day of week)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        fileName = dateFormat.format(cal.getTime()) + ".txt";
 
         //give the array the correct week starting date
         badges[0] = firstDayOfThisWeek;
@@ -79,7 +325,7 @@ public class BadgeModel {
         } catch (Exception e) {
             e.printStackTrace();
             Log.i("INFO","Error saving " + fileName);
-        }
+        }*/
 
         return 0;
     }
@@ -122,135 +368,6 @@ public class BadgeModel {
                         }).
                         setView(image);
         builder.create().show();
-    }
-
-    //looks for .txt file with badge data for the given topic
-    public int getBadgeData(){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String fileName = dateFormat.format(cal.getTime());
-
-        File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
-        File mySubDir = new File(myMainDir, topic);
-
-        if(!mySubDir.exists()){
-            mySubDir.mkdir();
-        }
-
-        ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
-        File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
-        for (File file : filesInFolder) { //For each of the entries do:
-            if (!file.isDirectory()) { //check that it's not a dir
-                files.add(new String(file.getName())); //push the filename as a string
-            }
-        }
-
-        // for each file in the topic folder ...
-        for (String file : files ) {
-
-            File myFinalDir = new File(mySubDir, file);
-            Log.i("INFO","Searching for "+ file +" ...");
-            if (myFinalDir.exists()){
-                Log.i("INFO","File detected.");
-                Log.i("INFO", "Path: "+ myFinalDir.getAbsolutePath());
-                Log.i("INFO", "File name: " + myFinalDir.getName());
-
-                //parse values
-                //reading text from file
-                // data tokenised as:
-                //@Date.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b1.b2.b5.b3.b4.b6.b7
-                try {
-                    Log.i("INFO", "Attempting to retrieving badge data ...");
-                    FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
-                    InputStreamReader isr = new InputStreamReader(fis);
-                    BufferedReader bufferedReader = new BufferedReader(isr);
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        sb.append(line);
-                    }
-                    Log.i("INFO", "Badge data retrieved successfully.");
-                    Log.i("INFO", "File contents: " + sb.toString());
-                    fis.close();
-                    //split the data by week
-                    String[] rawBadgeData = sb.toString().split("@");
-                    Log.i("INFO", "Badges[] contents pre write: " + Arrays.toString(badges));
-
-                    //the last iteration of this loop should contain the most recently saved data for this topic
-                    //So badges[0] will have the most recent date in it
-                    for (String badgeData: rawBadgeData) {
-                        //split the data by variable
-                        Log.i("INFO", "rawBadgeData - badgeData: " + badgeData);
-                        badges = badgeData.split("\\.");
-                        badgesList.add(badges);
-                    }
-                    Log.i("INFO", "Badges[] contents post write: " + Arrays.toString(badges));
-                } catch (Exception e) {
-                    Log.i("INFO", "Unable to retrieve badge data.");
-                    Log.i("INFO", e.getMessage());
-                    e.printStackTrace();
-                }
-            } else {
-                Log.i("INFO","Badges.txt could not be detected. Generating default badges.txt");
-                //create default data for this week.
-                createDefaultBadges();
-                badgesList.add(badges);
-            }
-        }
-        return 0;
-    }
-
-    private String getFirstDayOfThisWeek(){
-        // get today and clear time of day
-        //must use uk local to get monday as first day instead of sunday
-        cal = Calendar.getInstance(new Locale("en","UK"));
-        cal.set(Calendar.HOUR_OF_DAY, 0); // ! clear would not reset the hour of day !
-        cal.clear(Calendar.MINUTE);
-        cal.clear(Calendar.SECOND);
-        cal.clear(Calendar.MILLISECOND);
-
-        // get start of this week
-        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-
-        calToday = Calendar.getInstance(new Locale("en","UK"));
-        today = calToday.get(Calendar.DAY_OF_WEEK) - 2;
-
-        return cal.getTime().toString();
-    }
-
-    public void createDefaultBadges(){
-        // add-write text into file
-
-        //give the array the correct week starting date
-        badges[0] = firstDayOfThisWeek;
-
-        //create the text string from the array data
-        String badgeDefaultString = "";
-        for (String value: badges) {
-            badgeDefaultString += value + ".";
-        }
-        //remove the last ':' from the string
-        badgeDefaultString = badgeDefaultString.substring(0, badgeDefaultString.length()-1);
-
-        Log.i("INFO","Generating badge.txt from: " + badgeDefaultString);
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String fileName = dateFormat.format(cal.getTime()) + ".txt";
-
-            File myMainDir = context.getDir("badges", Context.MODE_PRIVATE);
-            File mySubDir = new File(myMainDir, topic);
-            mySubDir.mkdir();
-            File myFinalDir = new File(mySubDir, fileName);
-
-            FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
-            OutputStreamWriter outputWriter = new OutputStreamWriter(out);
-            outputWriter.write(badgeDefaultString);
-            outputWriter.close();
-            Log.i("INFO","Badges.txt saved.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.i("INFO","Error saving badges.txt");
-        }
     }
 
     //checks current array for badge
@@ -367,7 +484,6 @@ public class BadgeModel {
         checkBadge4();
         checkBadge5();
         checkBadge6();
-        checkBadge7();
 
         //update the badges array before persistane of any changes
         parseWeekListToStringData();
@@ -665,7 +781,8 @@ public class BadgeModel {
             File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
             for (File file : filesInFolder) { //For each of the entries do:
                 Date tempDate =null;
-                Calendar tempCal = cal;
+                Calendar tempCal = Calendar.getInstance(new Locale("en","UK"));
+                tempCal.setTime(cal.getTime());
 
                 if (!file.isDirectory()) { //check that it's not a dir
                     //check date
@@ -793,15 +910,19 @@ public class BadgeModel {
                     if (now.getTime().after(requiredDate.getTime())){
                         Log.i("INFO", "Deadline Passed, not eligible for badge 7");
                     } else {
+                        if(goals[6].equals("1")){
+                            pModel.addXP(200);
+                            Toast.makeText(context, "Wager Won! +200 addtional XP added to balance", Toast.LENGTH_SHORT).show();
+                        }
                         Log.i("INFO", "Eligible for badge 7");
                         weekList.get(7)[3] = "b7";
                         Log.i("INFO", "Badge 7 Earned");
-                        showBadgeDialogue("b7");
+                        //showBadgeDialogue("b7");
                         pModel = null;
                         pModel= new PrizeModel(context);
                         pModel.addXP(200);
                         return 1;
-
+                        //was tehre a bet, payout
                     }
 
 

@@ -114,6 +114,15 @@ public class PrizesActivity extends AppCompatActivity {
                         model.savePrizes(prizes);
                         detectSettings();
                         Toast.makeText(PrizesActivity.this, "You have redeemed: " + prizes[which], Toast.LENGTH_SHORT).show();
+
+                        switch (cost){
+                            case 100 : model.savePrizeLog("easy");
+                                break;
+                            case 150 : model.savePrizeLog("medium");
+                                break;
+                            case 200 : model.savePrizeLog("hard");
+                                break;
+                        }
                     } else {
                         Toast.makeText(PrizesActivity.this, "You do not have enough XP to redeem this prize.", Toast.LENGTH_SHORT).show();
                     }

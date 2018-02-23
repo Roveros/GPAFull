@@ -21,24 +21,20 @@ import java.util.Locale;
 
 public class GPAGoalModel {
 
-    private int dailyGoal, weeklyGoal, today;
-    private String deadlineDate, topic, firstDayOfWeek;
-    private Boolean complete;
+    private int today;
+    private String topic, firstDayOfWeek;
     private Context context;
     Calendar cal, calToday;
     String goals[];
     private ArrayList <String[]> goalList = new ArrayList <>();
-    static final int READ_BLOCK_SIZE = 100;
+    private BadgeModel model;
 
     public GPAGoalModel(Context context, String topic){
-        //should be fetching these values from persistent storage
-        //Create persistent model object to retrieve data
-     /*   dailyGoal = 1;
-        weeklyGoal = 8;
-        deadlineDate = "DD/MM/YYYY@HH:MM";*/
         this.topic = topic;
         getFirstDayOfThisWeek();
-        goals = new String[]{"","","","","",""};
+        //goals[] = date.daily.weekly.deadlinedate.deadlinetime.completed.bet
+        goals = new String[]{"","","","","","",""};
+        model = new BadgeModel(context, topic);
 
         this.context = context;
         getGoalData();
@@ -84,12 +80,9 @@ public class GPAGoalModel {
                     Log.i("INFO", "Path: "+ myFinalDir.getAbsolutePath());
                     Log.i("INFO", "File name: " + myFinalDir.getName());
 
-                    //parse values
-                    //reading text from file
                     //data tokenised as:
-                    //date@dailyGoal@weeklyGoal@DD/MM/YYYY@HH:MM@completed
-                    //date@1@8@10/03/2018@11:55@0
-                    //Need to store the date of each goal array so that I can search for this weeks' data
+                    //date.dailyGoal.weeklyGoal.DD/MM/YYYY.HH:MM.completed.bet
+                    //date.1.8.10/03/2018.11:55.0.0
                     try {
                         Log.i("INFO", "Attempting to retrieving goal data ...");
                         FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
@@ -104,7 +97,7 @@ public class GPAGoalModel {
                         Log.i("INFO", "File contents: " + sb.toString());
                         fis.close();
                         //split the data by week
-                        String[] rawGoalData = sb.toString().split("@");
+                        String[] rawGoalData = sb.toString().split("\\.");
                         Log.i("INFO", "Goals[] contents pre write: " + Arrays.toString(goals));
 
                         //the last iteration of this loop should contain the most recently saved data for this topic
@@ -140,7 +133,7 @@ public class GPAGoalModel {
                     } else {
                         //Only set goals to default if it is not currently set to THIS weeks' monday
                         if(!goals[0].equals(firstDayOfWeek)){
-                            goals = new String[]{firstDayOfWeek,"","","","",""};
+                            goals = new String[]{firstDayOfWeek,"","","","","",""};
                         }
                     }
                 }
@@ -148,7 +141,7 @@ public class GPAGoalModel {
                 Log.i("INFO", "Error detecting first day of the week within goals[]");
             }
         } else {
-            Log.i("INFO","Goals data could not be detected. Generating default badges.txt");
+            Log.i("INFO","Goals data could not be detected. Generating default goals.txt");
             //create default data for this week.
             createDefaultGoals();
             goalList.add(goals);
@@ -166,19 +159,20 @@ public class GPAGoalModel {
         // add-write text into file
 
         //give the array the correct week starting date
-        goals[0] = firstDayOfWeek;
-        goals[1] = "1";
-        goals[2] = "4";
-        goals[3] = "DD/MM/YYYY";
-        goals[4] = "HH:MM";
-        goals[5] = "0";
+        goals[0] = firstDayOfWeek;      //first day of this week
+        goals[1] = "1";                 //daily hour goal
+        goals[2] = "6";                 //weekly hour goal
+        goals[3] = "DD/MM/YYYY";        //deadline date
+        goals[4] = "HH:MM";             //deadline time
+        goals[5] = "0";                 //completed 1 or 0
+        goals[6] = "0";                 //24 hour b7 bet taken 1 or 0
 
         //create the text string from the array data
         String goalDefaultString = "";
         for (String value: goals) {
-            goalDefaultString += value + "@";
+            goalDefaultString += value + ".";
         }
-        //remove the last '@' from the string
+        //remove the last '.' from the string
         goalDefaultString = goalDefaultString.substring(0, goalDefaultString.length()-1);
 
         Log.i("INFO","Generating goals.txt from: " + goalDefaultString);
@@ -203,31 +197,25 @@ public class GPAGoalModel {
         }
     }
 
-    public void saveSettings(String dailyGoal, String weeklyGoal, String deadlineDate, String deadlineTime, String completed){
+    public int saveSettings(String dailyGoal, String weeklyGoal, String deadlineDate, String deadlineTime, String completed, String bet){
         // add-write text into file
-        //date@1@8@10/03/2018@11:55@0
+        //date.1.8.10/03/2018.11:55.0.0
         //get date of the this weeks first day (Monday)
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String fileName = dateFormat.format(cal.getTime());
         //String date = "Mon Feb 5 00:00:00 GMT+00:00 2018";
         String date = getFirstDayOfThisWeek();
         String settings = "";
-        settings = date + "@" + dailyGoal + "@" + weeklyGoal + "@" + deadlineDate + "@" + deadlineTime + "@" + completed;
+        settings = date + "." + dailyGoal + "." + weeklyGoal + "." + deadlineDate + "." + deadlineTime + "." + completed + "." + bet;
         Log.i("INFO", "Saving new goals data ...");
 
         try {
-            //get date of the this weeks first day (Monday)
-/*            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String fileName = dateFormat.format(cal.getTime().toString());*/
-           // cal.add(Calendar.DAY_OF_MONTH, -7);
-           //fileName = dateFormat.format(cal.getTime());
-
             //Identify the directory that goals data is saved in
             File myMainDir = context.getDir("goals", Context.MODE_PRIVATE);
             File mySubDir = new File(myMainDir, topic);
 
             //create it if it doesn't exist
-            if(!mySubDir.exists()){
+            if (!mySubDir.exists()) {
                 mySubDir.mkdir();
             }
 
@@ -238,12 +226,39 @@ public class GPAGoalModel {
             outputWriter.write(settings);
             outputWriter.close();
 
-            Log.i("INFO",settings + " persisted.");
+            Log.i("INFO", settings + " persisted.");
 
+            if (completed.equals("1") && bet.equals("1")) {
+                model = new BadgeModel(context, topic);
+                model.parseStringDatatoWeekList();
+                //model.getBadgeData();
+                int b7 = model.checkBadge7();
+                model.parseWeekListToStringData();
+                model.persist();
+
+                if(b7 == 1){
+                    return 1;
+                }
+                //Code for displaying an image in a alert dialogue
+/*                ImageView image = new ImageView(context);
+                image.setImageResource(R.drawable.b7);
+                AlertDialog.Builder builder =
+                        new AlertDialog.Builder(context).
+                                setPositiveButton("COLLECT BADGE", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                }).
+                                setView(image);
+                builder.create().show();*/
+            }
+            return 0;
         } catch (Exception e) {
             Log.i("INFO", "Failed to save new goals[] data");
             e.printStackTrace();
         }
+        return 0;
     }
 
     private String getFirstDayOfThisWeek(){

@@ -1,6 +1,7 @@
 package com.gpa.browne.gpafull;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -9,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 
@@ -19,18 +19,14 @@ import java.util.Calendar;
 
 public class PrizeModel {
     private Context context;
-    private ArrayList<String[]> badgesList = new ArrayList <>();
     private String prizes[];
-    private String firstDayOfThisWeek, topic;
-    private ArrayList <String[]> weekList = new ArrayList <>();
-    private int balance;
-    Calendar cal, calToday;
-    static final int READ_BLOCK_SIZE = 100;
+    int balance;
+    Calendar calToday;
 
     public PrizeModel(Context context){
         this.context = context;
         //firstDayOfThisWeek = getFirstDayOfThisWeek();
-        prizes = new String[]{"0","0","0","0"};
+        prizes = new String[]{"","","","0"};
         balance = 0;
         detectSettings();
 
@@ -108,6 +104,112 @@ public class PrizeModel {
             outputWriter.write(prizesData);
             outputWriter.close();
             Log.i("INFO", "Prizes Saved");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getPrizeLog(){
+        // add-write text into file
+        String rawPrizeLog ="";
+
+        File myMainDir = context.getDir("prizeLog", Context.MODE_PRIVATE);
+
+        File myFinalDir = new File(myMainDir, "prizeLog.txt");
+
+        if (myFinalDir.exists()){
+            Log.i("INFO","prizeLog.txt detected");
+            Log.i("INFO", "Path: "+ myFinalDir.getAbsolutePath());
+            Log.i("INFO", "File name: " + myFinalDir.getName());
+
+            //parse prizes
+            //reading text from file
+            try {
+                Log.i("INFO", "Retrieving prizeLog...");
+                FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader bufferedReader = new BufferedReader(isr);
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+                Log.i("INFO", "prizeLog Retrieved.");
+                Log.i("INFO", "File contents: " + sb.toString());
+                fis.close();
+                rawPrizeLog = sb.toString();
+                Log.i("INFO", rawPrizeLog);
+
+
+            } catch (Exception e) {
+                Log.i("INFO", "Unable to retrieve settings.");
+                Log.i("INFO", e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            Log.i("INFO","Prizes.txt not detected, default prizes generated");
+        }
+        return rawPrizeLog;
+    }
+
+    public void savePrizeLog(String prize){
+        // add-write text into file
+        String rawPrizeLog ="";
+
+        File myMainDir = context.getDir("prizeLog", Context.MODE_PRIVATE);
+
+        File myFinalDir = new File(myMainDir, "prizeLog.txt");
+
+        if (myFinalDir.exists()){
+            Log.i("INFO","prizeLog.txt detected");
+            Log.i("INFO", "Path: "+ myFinalDir.getAbsolutePath());
+            Log.i("INFO", "File name: " + myFinalDir.getName());
+
+            //parse prizes
+            //reading text from file
+            try {
+                Log.i("INFO", "Retrieving prizeLog...");
+                FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader bufferedReader = new BufferedReader(isr);
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+                Log.i("INFO", "prizeLog Retrieved.");
+                Log.i("INFO", "File contents: " + sb.toString());
+                fis.close();
+                rawPrizeLog = sb.toString();
+                Log.i("INFO", rawPrizeLog);
+
+
+            } catch (Exception e) {
+                Log.i("INFO", "Unable to retrieve settings.");
+                Log.i("INFO", e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            Log.i("INFO","Prizes.txt not detected, default prizes generated");
+            savePrizes(prizes);
+        }
+
+        calToday = Calendar.getInstance();
+
+        if(TextUtils.isEmpty(rawPrizeLog)){
+            rawPrizeLog = calToday.getTime().toString() + "%" + prize;
+        } else {
+            rawPrizeLog = rawPrizeLog + "@" + calToday.getTime().toString() + "%" + prize;
+        }
+
+        try {
+
+            FileOutputStream out = new FileOutputStream(myFinalDir, false); //Use the stream as usual to write into the file
+            OutputStreamWriter outputWriter = new OutputStreamWriter(out);
+            outputWriter.write(rawPrizeLog);
+            outputWriter.close();
+            Log.i("INFO", "PrizeLog Saved");
 
         } catch (Exception e) {
             e.printStackTrace();

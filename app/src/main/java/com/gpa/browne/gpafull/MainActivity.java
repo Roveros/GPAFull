@@ -25,8 +25,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,6 +42,17 @@ public class MainActivity extends AppCompatActivity {
     CoordinatorLayout layout;
     ProgressBar progressBar;
 
+    String topics[];
+
+    String prizeData = "";
+    String prizeLog = "";
+    String settings = "";
+
+    String topicTitle = "";
+    String badgeData = "";
+    String goalData = "";
+    String logData = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         //init the GPAConfigModel
         config = new GPAConfigModel(this);
-
 
         //get timer display TextView from view
         tvTimerDisplay = findViewById(R.id.tvTimerDisplay);
@@ -66,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
         //init the TimerModel and pass it the tvTimerDisplay TextView
         timer = new TimerController(MainActivity.this, layout, progressBar, config, tvTimerDisplay, tvCounterDisplay, etSessionTitle);
+
+        topics = null;
 
     }
 
@@ -115,40 +131,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayTopics() {
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle("Choose Topic");
-
-        final StringBuilder sb = new StringBuilder();
         File myMainDir = getDir("logs", Context.MODE_PRIVATE);
         File[] files = myMainDir.listFiles();
-        for (File inFile : files) {
-            if (inFile.isDirectory()) {
-                Log.i("INFO", inFile.getName());
-                sb.append(inFile.getName()+"\n");
-            }
-        }
-        sb.append("Exit");
-        final String[] types = sb.toString().split("\\n");
+        
+        if(files.length != 0){
+            AlertDialog.Builder b = new AlertDialog.Builder(this);
+            b.setTitle("Choose Topic");
 
-        b.setItems(types, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                dialog.dismiss();
-                if(!types[which].equals("Exit")){
-                    etSessionTitle.setText(types[which]);
+            final StringBuilder sb = new StringBuilder();
+            for (File inFile : files) {
+                if (inFile.isDirectory()) {
+                    Log.i("INFO", inFile.getName());
+                    sb.append(inFile.getName()+"\n");
                 }
-
             }
-        });
+            sb.append("Exit");
+            final String[] types = sb.toString().split("\\n");
+            topics = new String[types.length-1];
+            for (int i = 0; i < types.length-1 ; i++) {
+                topics[i] = types[i];
+            }
 
-        b.show();
+            b.setItems(types, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    dialog.dismiss();
+                    if(!types[which].equals("Exit")){
+                        etSessionTitle.setText(types[which]);
+                    }
+
+                }
+            });
+            b.show();
+        } else {
+            Toast.makeText(this, "No topics detected", Toast.LENGTH_SHORT).show();
+        }
+ 
     }
 
     //Starts timer if not already started
     public void onStartClick(View view) {
-        config = new GPAConfigModel(this);
-        timer = new TimerController(MainActivity.this, layout, progressBar, config, tvTimerDisplay, tvCounterDisplay, etSessionTitle);
+        //config = new GPAConfigModel(this);
+        //timer = new TimerController(MainActivity.this, layout, progressBar, config, tvTimerDisplay, tvCounterDisplay, etSessionTitle);
         timer.start("pom");
     }
 
@@ -171,63 +196,101 @@ public class MainActivity extends AppCompatActivity {
 
     //Sends all text data for the session title
     protected void sendEmail() {
-        if(!TextUtils.isEmpty(etSessionTitle.getText())){
-            Log.i("INFO", "Sending email ... ");
 
-            String[] TO = {
-                    "b00075549@student.itb.ie"
-            };
-            String[] CC = {
-                    "robert.browne@student.itb.ie"
-            };
-            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            emailIntent.setData(Uri.parse("mailto:"));
-            emailIntent.setType("text/plain");
-            emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
-            emailIntent.putExtra(Intent.EXTRA_CC, CC);
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Session Data");
+        Log.i("INFO", "Sending email ... ");
 
-            File myFinalDir;
-            List<File> fileList = new ArrayList<>();
+        String[] TO = {
+                "b00075549@student.itb.ie"
+        };
+        String[] CC = {
+                "robert.browne@student.itb.ie"
+        };
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "All Data");
 
-            StringBuilder stringBuilder = new StringBuilder();
+        //get prizedata ¦
+        //get prizelog ¦
+        //get settings |
+        //foreach topic {
+        //      get topic title ¦
+        //      get all badge files, sort by creation date, add to list, add to string week 1 @ week 2 @ etc ¦
+        //      get all goal files, sort by creation date, add to list, add to string week 1 @ week 2 @ etc ¦
+        //      get all log files, sort by creation date, add to list, add to string day 1 @ day 2 @ etc |
+        //remove final |
 
-            // add-write text into file
-            try {
-                File myMainDir = getDir("logs", Context.MODE_PRIVATE);
-                File mySubDir = new File(myMainDir, etSessionTitle.getText().toString());
+        prizeData = getPrizeData();
+        prizeLog = getPrizeLog();
+        settings = getSettings();
 
-                //list all the text files in the directory
-                String fileListString[] = mySubDir.list();
-                for (String file:fileListString) {
-                    myFinalDir = new File(mySubDir, file);
-                    fileList.add(myFinalDir);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e("ERROR!", "Could not locate file: " + etSessionTitle.getText().toString() + "/");
-            }
-
-            //concat all the files contents into a single string
-            try {
-                for (File file: fileList) {
-                    stringBuilder.append(readFileToString(file.getPath()));
-                }
-                emailIntent.putExtra(Intent.EXTRA_TEXT, stringBuilder.toString());
-            } catch (Exception e) {
-                Log.e("ERROR!", "IOException converting files to string.");
-            }
-
-            //Start the email intent
-            try {
-                startActivity(Intent.createChooser(emailIntent, "Choose an email provider"));
-                finish();
-                Log.i("INFO", "Email sent ...");
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(MainActivity.this,
-                        "No email client installed. Please download and install Microsoft Outlook", Toast.LENGTH_SHORT).show();
-            }
+        if(TextUtils.isEmpty(prizeData)){
+            prizeData = "NULL";
         }
+        if(TextUtils.isEmpty(prizeLog)){
+            prizeLog = "NULL";
+        }
+        if(TextUtils.isEmpty(settings)){
+            settings = "NULL";
+        }
+
+        String generalData = prizeData + "¦" + prizeLog + "¦" + settings;
+        Log.i("INFO-email", generalData);
+
+
+        for (String topic : topics) {
+            topicTitle = topic;
+            if(TextUtils.isEmpty(badgeData)){
+                badgeData = badgeData + getBadgeData(topic);
+            } else {
+                badgeData = badgeData + "@" + getBadgeData(topic);
+            }
+            goalData = getGoalData(topic);
+            logData = getLogData(topic);
+        }
+
+        if(TextUtils.isEmpty(badgeData)){
+            badgeData = "NULL";
+        }
+        if(TextUtils.isEmpty(goalData)){
+            goalData = "NULL";
+        }
+        if(TextUtils.isEmpty(logData)){
+            logData = "NULL";
+        }
+
+
+        String topicData = topicTitle + "¦" + badgeData + "¦" + goalData + "¦" + logData;
+        Log.i("INFO-email", "TopicData: " + topicData);
+
+        String allData = generalData + "|" + topicData;
+
+        //concat all the files contents into a single string
+        emailIntent.putExtra(Intent.EXTRA_TEXT, allData);
+
+
+/*         //concat all the files contents into a single string
+        try {
+            for (File file: fileList) {
+                stringBuilder.append(readFileToString(file.getPath()));
+            }
+            emailIntent.putExtra(Intent.EXTRA_TEXT, stringBuilder.toString());
+        } catch (Exception e) {
+            Log.e("ERROR!", "IOException converting files to string.");
+        }*/
+
+        //Start the email intent
+        try {
+            //startActivity(Intent.createChooser(emailIntent, "Choose an email provider"));
+            //finish();
+            Log.i("INFO", "Email sent ...");
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(MainActivity.this,
+                    "No email client installed. Please download and install Microsoft Outlook", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     //reads files and returns a string
@@ -248,6 +311,117 @@ public class MainActivity extends AppCompatActivity {
 
         return fileAsString;
     }
+
+    public String getPrizeData() {
+        PrizeModel model = new PrizeModel(this);
+        String prizeDataArray[] = model.getprizes();
+        String prizeDataString = "";
+
+        for (String variable: prizeDataArray) {
+            if(variable.length() == 0){
+                variable = "NULL";
+            }
+            if(TextUtils.isEmpty(prizeDataString)){
+                prizeDataString = prizeDataString + variable;
+            } else {
+                prizeDataString = prizeDataString + "." + variable;
+            }
+        }
+        
+        //string should resemble X.X.X.X
+        Log.i("INFO-Email", "Prize Data: " + prizeDataString);
+        return prizeDataString;
+    }
+
+    public String getPrizeLog() {
+        PrizeModel model = new PrizeModel(this);
+        String prizeLogString = model.getPrizeLog();
+
+        //
+        Log.i("INFO-Email", "Prize Log: " + prizeLogString);
+        return prizeLogString;
+
+    }
+
+    public String getSettings() {
+        GPAConfigModel model = new GPAConfigModel(this);
+        String settings = model.getSettings();
+
+        Log.i("INFO-Email", "Settings: " + settings);
+        return settings;
+    }
+
+    public String getBadgeData(String topic) {
+        BadgeModel model = new BadgeModel(this, topic);
+        ArrayList <String[]> allBadgeData = model.getAllBadgeData();
+        ArrayList <Date> dates = new ArrayList<>();
+        DateFormat df;
+        for (String array[] : allBadgeData) {
+           try {
+               df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy", Locale.ENGLISH);
+               dates.add(df.parse(array[0]));
+           } catch (ParseException e) {
+               Log.i("INFO-getBadgeData", "Error formatting date");
+            }
+        }
+
+        Boolean unsorted = true;
+        while (unsorted) {
+            unsorted = false;
+            for (int i = 0; i < dates.size()-1; i++) {
+                Date temp1 = dates.get(i);
+                Date temp2 = dates.get(i+1);
+                String tempArray1[] = allBadgeData.get(i);
+                String tempArray2[] = allBadgeData.get(i+1);
+
+
+                //if temp1 is after temp2, switch'em
+                if(temp1.compareTo(temp2) == 1){
+                    dates.set(i, temp2);
+                    dates.set(i+1, temp1);
+                    allBadgeData.set(i, tempArray2);
+                    allBadgeData.set(i+1, tempArray1);
+                    unsorted = true;
+                    Log.i("INFO-getBadgeData", "Switching");
+                }
+            }
+        }
+
+        //dates and allBadgeData is now sorted by date
+
+        String allDataString = "";
+        //for each array in the list
+        for (int i = 0; i < allBadgeData.size() ; i++) {
+            String tempBadgeString = "";
+            //for each variable in the array, append to string
+            for (String variable : allBadgeData.get(i)) {
+                if(TextUtils.isEmpty(tempBadgeString)){
+                    tempBadgeString = tempBadgeString + variable;
+                } else {
+                    tempBadgeString = tempBadgeString + "." + variable;
+                }
+            }
+
+            //take the string above and add it to the allDataString
+            if(TextUtils.isEmpty(allDataString)){
+                allDataString = allDataString + tempBadgeString;
+            } else {
+                allDataString = allDataString + "@" + tempBadgeString;
+            }
+        }
+
+        Log.i("INFO-Email", "All Badge data for topic " + topic + ": " + allDataString);
+        return allDataString;
+    }
+
+    public String getGoalData(String topic) {
+        return goalData;
+    }
+
+    public String getLogData(String topic) {
+        return logData;
+    }
+
 
     public void onDebugClick(View view) {
 //Code for displaying an image in a alert dialogue
