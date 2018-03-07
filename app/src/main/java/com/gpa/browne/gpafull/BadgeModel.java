@@ -52,6 +52,9 @@ public class BadgeModel {
     //if it is not from this week then it creates a default data file for this week
     public int getBadgeData(){
 
+        //ensure list is clear
+        badgesList.clear();
+
         //this gives the filename of the data file for this week we are looking for
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String thisWeeksBadgeData = dateFormat.format(cal.getTime());

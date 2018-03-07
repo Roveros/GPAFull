@@ -62,6 +62,8 @@ public class GPAGoalModel {
         //for each file in there add it tot the list of files
         ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
         File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
+
+
         for (File file : filesInFolder) { //For each of the entries do:
             if (!file.isDirectory()) { //check that it's not a dir
                 files.add(new String(file.getName())); //push the filename as a string
@@ -133,7 +135,8 @@ public class GPAGoalModel {
                     } else {
                         //Only set goals to default if it is not currently set to THIS weeks' monday
                         if(!goals[0].equals(firstDayOfWeek)){
-                            goals = new String[]{firstDayOfWeek,"","","","","",""};
+                            goals = new String[]{firstDayOfWeek,"1","6","DD/MM/YYYY","HH:MM","0","0"};
+                            saveSettings("1","6","DD/MM/YYYY","HH:MM","0","0");
                         }
                     }
                 }
@@ -282,5 +285,10 @@ public class GPAGoalModel {
     public String[] getThisWeeksGoals() {
         getGoalData();
         return goals;
+    }
+
+    public ArrayList<String[]> getAllGoalData() {
+        getGoalData();
+        return goalList;
     }
 }

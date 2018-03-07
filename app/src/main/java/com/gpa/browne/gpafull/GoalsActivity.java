@@ -65,7 +65,7 @@ public class GoalsActivity extends AppCompatActivity {
         pModel = new PrizeModel(getApplicationContext());
         //date@1@8@10/03/2018@11:55@0
         String settings[] = model.getGoals();
-
+        Log.i("Special", "Settings: " + Arrays.toString(settings));
 
         etGoalDaily.setText(settings[1]);
         etGoalWeekly.setText(settings[2]);

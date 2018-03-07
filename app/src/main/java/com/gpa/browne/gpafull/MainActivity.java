@@ -29,6 +29,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -121,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_prizes) {
             Intent intent = new Intent(this, PrizesActivity.class);
             startActivity(intent);
+        } else if (id == R.id.action_badges) {
+            Intent intent = new Intent(this, BadgesActivity.class);
+            startActivity(intent);
         } else if (id == R.id.action_email) {
             sendEmail();
         } else if (id == R.id.action_select_topic) {
@@ -147,11 +152,6 @@ public class MainActivity extends AppCompatActivity {
             }
             sb.append("Exit");
             final String[] types = sb.toString().split("\\n");
-            topics = new String[types.length-1];
-            for (int i = 0; i < types.length-1 ; i++) {
-                topics[i] = types[i];
-            }
-
             b.setItems(types, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -222,6 +222,21 @@ public class MainActivity extends AppCompatActivity {
         //      get all log files, sort by creation date, add to list, add to string day 1 @ day 2 @ etc |
         //remove final |
 
+        File myMainDir = getDir("logs", Context.MODE_PRIVATE);
+        File[] files = myMainDir.listFiles();
+
+        if(files.length != 0) {
+            final StringBuilder sb = new StringBuilder();
+            for (File inFile : files) {
+                if (inFile.isDirectory()) {
+                    //Log.i("INFO", inFile.getName());
+                    sb.append(inFile.getName() + "\n");
+                }
+            }
+            final String[] types = sb.toString().split("\\n");
+            topics = types;
+        }
+
         prizeData = getPrizeData();
         prizeLog = getPrizeLog();
         settings = getSettings();
@@ -236,19 +251,40 @@ public class MainActivity extends AppCompatActivity {
             settings = "NULL";
         }
 
+        String allTopicData = "";
         String generalData = prizeData + "¦" + prizeLog + "¦" + settings;
         Log.i("INFO-email", generalData);
 
 
         for (String topic : topics) {
             topicTitle = topic;
+            
             if(TextUtils.isEmpty(badgeData)){
                 badgeData = badgeData + getBadgeData(topic);
             } else {
                 badgeData = badgeData + "@" + getBadgeData(topic);
             }
-            goalData = getGoalData(topic);
-            logData = getLogData(topic);
+
+            if(TextUtils.isEmpty(goalData)){
+                goalData = goalData + getGoalData(topic);
+            } else {
+                goalData = goalData + "@" + getGoalData(topic);
+            }
+
+            if(TextUtils.isEmpty(logData)){
+                logData = logData + getLogData(topic);
+            } else {
+                logData = logData + "@" + getLogData(topic);
+            }
+            
+            String tempTopicData = topicTitle + "¦" + badgeData + "¦" + goalData + "¦" + logData;
+            Log.i("INFO-email", "TopicData: " + tempTopicData);
+
+            if(TextUtils.isEmpty(allTopicData)){
+                allTopicData = allTopicData + tempTopicData;
+            } else {
+                allTopicData = allTopicData + "|" + tempTopicData;
+            }
         }
 
         if(TextUtils.isEmpty(badgeData)){
@@ -261,12 +297,8 @@ public class MainActivity extends AppCompatActivity {
             logData = "NULL";
         }
 
-
-        String topicData = topicTitle + "¦" + badgeData + "¦" + goalData + "¦" + logData;
-        Log.i("INFO-email", "TopicData: " + topicData);
-
-        String allData = generalData + "|" + topicData;
-
+        String allData = generalData + "|" + allTopicData;
+        Log.i("INFO-email", "All Data: " + allData);
         //concat all the files contents into a single string
         emailIntent.putExtra(Intent.EXTRA_TEXT, allData);
 
@@ -283,8 +315,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Start the email intent
         try {
-            //startActivity(Intent.createChooser(emailIntent, "Choose an email provider"));
-            //finish();
+            startActivity(Intent.createChooser(emailIntent, "Choose an email provider"));
+            finish();
             Log.i("INFO", "Email sent ...");
         } catch (android.content.ActivityNotFoundException ex) {
             Toast.makeText(MainActivity.this,
@@ -415,11 +447,232 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String getGoalData(String topic) {
-        return goalData;
+        GPAGoalModel model = new GPAGoalModel(this, topic);
+        ArrayList <String[]> allGoalData = model.getAllGoalData();
+        ArrayList <Date> dates = new ArrayList<>();
+        DateFormat df;
+        for (String array[] : allGoalData) {
+            try {
+                df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy", Locale.ENGLISH);
+                dates.add(df.parse(array[0]));
+            } catch (ParseException e) {
+                Log.i("INFO-getGoalData", "Error formatting date");
+            }
+        }
+
+        Boolean unsorted = true;
+        while (unsorted) {
+            unsorted = false;
+            for (int i = 0; i < dates.size()-1; i++) {
+                Date temp1 = dates.get(i);
+                Date temp2 = dates.get(i+1);
+                String tempArray1[] = allGoalData.get(i);
+                String tempArray2[] = allGoalData.get(i+1);
+
+
+                //if temp1 is after temp2, switch'em to sort by date ascending
+                if(temp1.compareTo(temp2) == 1){
+                    dates.set(i, temp2);
+                    dates.set(i+1, temp1);
+                    allGoalData.set(i, tempArray2);
+                    allGoalData.set(i+1, tempArray1);
+                    unsorted = true;
+                    Log.i("INFO-getGoalData", "Switching");
+                }
+            }
+        }
+
+        //dates and allGoalData is now sorted by date
+
+        String allDataString = "";
+        //for each array in the list
+        for (int i = 0; i < allGoalData.size() ; i++) {
+            String tempGoalString = "";
+            //for each variable in the array, append to string
+            for (String variable : allGoalData.get(i)) {
+                if(TextUtils.isEmpty(tempGoalString)){
+                    tempGoalString = tempGoalString + variable;
+                } else {
+                    tempGoalString = tempGoalString + "." + variable;
+                }
+            }
+
+            //take the string above and add it to the allDataString
+            if(TextUtils.isEmpty(allDataString)){
+                allDataString = allDataString + tempGoalString;
+            } else {
+                allDataString = allDataString + "@" + tempGoalString;
+            }
+        }
+
+        Log.i("INFO-Email", "All Goal data for topic " + topic + ": " + allDataString);
+        return allDataString;
     }
 
     public String getLogData(String topic) {
-        return logData;
+ /*       TimerModel model = new TimerModel(this, topic);
+        ArrayList <String[]> allLogData = model.getAllLogData();
+        Get all log data into an arraylist of logs
+        */
+        ArrayList<String[]> logList = new ArrayList<>();
+        String logs[] = new String[2];
+        DateFormat df1;
+
+        Calendar cal = Calendar.getInstance(new Locale("en","UK"));
+        cal.set(Calendar.HOUR_OF_DAY, 0); // ! clear would not reset the hour of day !
+        cal.clear(Calendar.MINUTE);
+        cal.clear(Calendar.SECOND);
+        cal.clear(Calendar.MILLISECOND);
+
+        // get start of this week
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+
+        //get date of the this weeks first day (Monday)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String fileName = dateFormat.format(cal.getTime());
+
+        //Identify the directory that goals data is saved in
+        File myMainDir = getDir("logs", Context.MODE_PRIVATE);
+        File mySubDir = new File(myMainDir, topic);
+
+        //create it if it doesn't exist
+        if(!mySubDir.exists()){
+            mySubDir.mkdir();
+        }
+
+        //for each file in there add it tot the list of files
+        ArrayList<String> files = new ArrayList<String>(); //ArrayList cause you don't know how many files there is
+        File[] filesInFolder = mySubDir.listFiles(); // This returns all the folders and files in your path
+
+
+        for (File file : filesInFolder) { //For each of the entries do:
+            if (!file.isDirectory()) { //check that it's not a dir
+                files.add(new String(file.getName())); //push the filename as a string
+            }
+        }
+
+        //If there are files
+        if(!files.isEmpty()) {
+            logList.clear();
+            // for each file in the topic folder ...
+            for (String file : files) {
+
+                File myFinalDir = new File(mySubDir, file);
+                Log.i("INFO", "Searching for " + file + " ...");
+                if (myFinalDir.exists()) {
+                    Log.i("INFO", "File detected.");
+                    Log.i("INFO", "Path: " + myFinalDir.getAbsolutePath());
+                    Log.i("INFO", "File name: " + myFinalDir.getName());
+
+                    //data tokenised example:
+                    //type.startTime.endTime.endType%type.startTime.endTime.type.startTime.endTime.endType
+                    //pom.14:21:35.14:21:40.cancelled%pom.14:21:53.14:21:58.pom.14:22:00.14:22:05.end%
+                    try {
+                        Log.i("INFO", "Attempting to retrieving log data ...");
+                        FileInputStream fis = new FileInputStream(new File(myFinalDir.getAbsolutePath()));
+                        InputStreamReader isr = new InputStreamReader(fis);
+                        BufferedReader bufferedReader = new BufferedReader(isr);
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            sb.append(line);
+                        }
+                        Log.i("INFO", "Log data retrieved successfully.");
+                        Log.i("INFO", "File contents: " + sb.toString());
+                        fis.close();
+                        //split the data by week
+                        String rawlogData = sb.toString();
+                        Log.i("INFO", "logs contents pre write: " + logs);
+
+                        //the last iteration of this loop should contain the most recently saved data for this topic
+                        //So badges[0] will have the most recent date in it
+
+                        //split the data by variable
+                        Log.i("INFO", "rawlogData: " + rawlogData);
+                        logs[1] = rawlogData;
+
+                        df1 = new SimpleDateFormat("yyyy-MM-dd");
+                        String rawDate = (file.toString().subSequence(0, file.toString().length() - 4).toString());
+                        Date tempDate = df1.parse(rawDate);
+                        Calendar tempcal = Calendar.getInstance(new Locale("en", "UK"));
+                        tempcal.setTime(tempDate);
+                        logs[0] = tempcal.getTime().toString();
+                        logList.add(logs);
+
+                        Log.i("INFO", "Logs[] contents post write: " + Arrays.toString(logs));
+                    } catch (Exception e) {
+                        Log.i("INFO", "Unable to retrieve log data.");
+                        Log.i("INFO", e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.i("INFO", "Logs data could not be detected. Generating default logs.txt");
+                    //create default data for this week.
+                }
+            }
+        }
+
+
+
+
+        ArrayList <Date> dates = new ArrayList<>();
+        DateFormat df;
+        for (String array[] : logList) {
+            try {
+                df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy", Locale.ENGLISH);
+                dates.add(df.parse(array[0]));
+            } catch (ParseException e) {
+                Log.i("INFO-getLogData", "Error formatting date");
+            }
+        }
+
+        Boolean unsorted = true;
+        while (unsorted) {
+            unsorted = false;
+            for (int i = 0; i < dates.size()-1; i++) {
+                Date temp1 = dates.get(i);
+                Date temp2 = dates.get(i+1);
+                String tempArray1[] = logList.get(i);
+                String tempArray2[] = logList.get(i+1);
+
+
+                //if temp1 is after temp2, switch'em to sort by date ascending
+                if(temp1.compareTo(temp2) == 1){
+                    dates.set(i, temp2);
+                    dates.set(i+1, temp1);
+                    logList.set(i, tempArray2);
+                    logList.set(i+1, tempArray1);
+                    unsorted = true;
+                    Log.i("INFO-getLogData", "Switching");
+                }
+            }
+        }
+
+        //dates and allLogData is now sorted by date
+
+        String allDataString = "";
+        //for each array in the list
+        for (int i = 0; i < logList.size() ; i++) {
+            String tempLogString = "";
+            //for each variable in the array, append to string
+            for (String variable : logList.get(i)) {
+                if(TextUtils.isEmpty(tempLogString)){
+                    tempLogString = tempLogString + variable;
+                } else {
+                    tempLogString = tempLogString + "." + variable;
+                }
+            }
+
+            //take the string above and add it to the allDataString
+            if(TextUtils.isEmpty(allDataString)){
+                allDataString = allDataString + tempLogString;
+            } else {
+                allDataString = allDataString + "@" + tempLogString;
+            }
+        }
+
+        Log.i("INFO-Email", "All Log data for topic " + topic + ": " + allDataString);
+        return allDataString;
     }
 
 

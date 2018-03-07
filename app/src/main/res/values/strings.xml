@@ -84,4 +84,5 @@
     <string name="title_activity_option">OptionActivity</string>
     <string name="title_activity_goals">GoalsActivity</string>
     <string name="title_activity_prizes">PrizesActivity</string>
+    <string name="title_activity_badges">BadgesActivity</string>
 </resources>

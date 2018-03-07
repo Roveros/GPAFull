@@ -72,7 +72,7 @@ public class PrizesActivity extends AppCompatActivity {
         }
 
         model.savePrizes(prizes);
-
+        finish();
     }
 
     public void onClaimClick(View view) {
