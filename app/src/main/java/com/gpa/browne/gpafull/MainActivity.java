@@ -129,13 +129,15 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_email) {
             sendEmail();
         } else if (id == R.id.action_select_topic) {
-            displayTopics();
-        }
+            displayTopics("select");
+        } else if (id == R.id.action_delete_topic) {
+            displayTopics("delete");
+    }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void displayTopics() {
+    private void displayTopics(final String actionRequired) {
         File myMainDir = getDir("logs", Context.MODE_PRIVATE);
         File[] files = myMainDir.listFiles();
         
@@ -156,18 +158,24 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
 
-                    dialog.dismiss();
-                    if(!types[which].equals("Exit")){
+                dialog.dismiss();
+                if(!types[which].equals("Exit")){
+                    if(actionRequired.equals("select")){
                         etSessionTitle.setText(types[which]);
+                    } else {
+                        deleteTopic(types[which]);
                     }
-
+                }
                 }
             });
             b.show();
         } else {
             Toast.makeText(this, "No topics detected", Toast.LENGTH_SHORT).show();
         }
- 
+    }
+
+    private void deleteTopic(String topic){
+        Log.i("INFO", "Delete " + topic);
     }
 
     //Starts timer if not already started

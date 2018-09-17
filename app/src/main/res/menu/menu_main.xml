@@ -14,27 +14,32 @@
         android:title="Select Topic" />
 
     <item
-        android:id="@+id/action_goals"
+        android:id="@+id/action_delete_topic"
         android:orderInCategory="102"
+        android:title="Delete Topic" />
+
+    <item
+        android:id="@+id/action_goals"
+        android:orderInCategory="103"
         android:title="Goals and Betting"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_prizes"
-        android:orderInCategory="103"
+        android:orderInCategory="104"
         android:title="Prizes"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_badges"
-        android:orderInCategory="104"
+        android:orderInCategory="105"
         android:title="View Badges" />
     <item
         android:id="@+id/action_email"
-        android:orderInCategory="105"
+        android:orderInCategory="106"
         android:title="Email Data" />
     <item
         android:id="@+id/action_exit"
-        android:orderInCategory="106"
+        android:orderInCategory="107"
         android:title="@string/action_exit" />
 
 </menu>
