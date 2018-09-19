@@ -174,9 +174,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void deleteTopic(String topic){
-        Log.i("INFO", "Delete " + topic);
+    public void deleteTopic(String topic){
+        File myLogsDir = getDir("logs", Context.MODE_PRIVATE);
+        File mySubDir = new File(myLogsDir, topic);
+        deleteRecursive(mySubDir);
+        File myBadgesDir = getDir("badges", Context.MODE_PRIVATE);
+        mySubDir = new File(myBadgesDir, topic);
+        deleteRecursive(mySubDir);
+        File myGoalsDir = getDir("goals", Context.MODE_PRIVATE);
+        mySubDir = new File(myGoalsDir, topic);
+        deleteRecursive(mySubDir);
     }
+
+    public void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) {
+                Log.i("DEL", "Deleting: "+ child.getName());
+                child.delete();
+                deleteRecursive(child);
+            }
+            Log.i("DEL", "Deleting: "+ fileOrDirectory.getName());
+           fileOrDirectory.delete();
+        }
+    }
+
 
     //Starts timer if not already started
     public void onStartClick(View view) {
