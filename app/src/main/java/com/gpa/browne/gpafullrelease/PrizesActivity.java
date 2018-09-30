@@ -1,4 +1,4 @@
-package com.gpa.browne.gpafull;
+package com.gpa.browne.gpafullrelease;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.gpa.browne.gpafull">
+    package="com.gpa.browne.gpafullrelease">
 
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.gpa.browne.gpafullrelease.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -23,22 +23,22 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name="com.gpa.browne.gpafullrelease.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".GoalsActivity"
+            android:name="com.gpa.browne.gpafullrelease.GoalsActivity"
             android:label="@string/title_activity_goals"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".PrizesActivity"
+            android:name="com.gpa.browne.gpafullrelease.PrizesActivity"
             android:label="@string/title_activity_prizes"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".BadgesActivity"
+            android:name="com.gpa.browne.gpafullrelease.BadgesActivity"
             android:label="@string/title_activity_badges"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>

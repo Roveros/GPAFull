@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/holo_red_dark"
-    tools:context="com.gpa.browne.gpafull.MainActivity">
+    tools:context="com.gpa.browne.gpafullrelease.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

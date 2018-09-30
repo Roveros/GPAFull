@@ -1,4 +1,4 @@
-package com.gpa.browne.gpafull;
+package com.gpa.browne.gpafullrelease;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -207,6 +207,11 @@ public class BadgeModel {
         calToday = Calendar.getInstance(new Locale("en","UK"));
         today = calToday.get(Calendar.DAY_OF_WEEK) - 2;
 
+        //when attempting to set "today" to 0 for monday and 6 for sunday foe use with arrays
+        if (today < 0){
+            today = 6;
+        }
+
         return cal.getTime().toString();
     }
 
@@ -377,6 +382,8 @@ public class BadgeModel {
     public boolean hasBadge(String badgeNumber){
 
          if(badgeNumber.equals("b1")){
+             Log.i("DEBUG", "Today: " + today );
+             Log.i("DEBUG", "weekList: " + weekList.size());
              return weekList.get(today)[0].equals("b1");
          } else if(badgeNumber.equals("b2")){
              return weekList.get(today)[1].equals("b2");
