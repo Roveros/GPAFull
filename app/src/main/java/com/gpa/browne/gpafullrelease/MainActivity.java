@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("INFO-email", "TopicData: " + tempTopicData);
                 allTopicData = allTopicData + tempTopicData;
             }
-            
+
             if (TextUtils.isEmpty(badgeData)) {
                 badgeData = "NULL";
             }
